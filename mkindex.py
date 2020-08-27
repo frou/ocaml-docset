@@ -47,6 +47,8 @@ def run(filename, file_path):
 
     if h1_content[0].startswith('Module') or h1_content[0].startswith('Functor'):
         module_name = h1_content[1]
+        if module_name == "Pervasives" or module_name.startswith("Stdlib."):
+            return soup, []
         add_index(module_name, TYPE_MODULE, filename)
         handle_module(filename, module_name, soup)
         return soup, []
