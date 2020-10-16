@@ -12,7 +12,6 @@ Improvements over the original docset:
 
 ## Building
 
-    pipenv install
     make
 
 These commands will download the required reference manual file and create the
