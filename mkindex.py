@@ -4,6 +4,7 @@ import os
 import re
 import sqlite3
 import urllib.parse
+from fnmatch import fnmatch
 
 from bs4 import BeautifulSoup
 
@@ -148,6 +149,9 @@ if __name__ == '__main__':
     input_dir = sys.argv[1]
     output_dir = sys.argv[2]
     files = glob.glob(input_dir + '/**/*.html', recursive=True)
+    # Ignore files related to the compiler's own library.
+    # "Warning: This library is part of the internal OCaml compiler API, and is not the language standard library."
+    files = [f for f in files if not fnmatch(f, "**/compilerlibref/*")]
 
     db_filename = os.path.join(output_dir, 'docSet.dsidx')
 
