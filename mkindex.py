@@ -8,12 +8,14 @@ from fnmatch import fnmatch
 
 from bs4 import BeautifulSoup
 
+# REF: https://kapeli.com/docsets#supportedentrytypes
 TYPE_CONSTRUCTOR = 'Constructor'
 TYPE_EXCEPTION   = 'Exception'
 TYPE_FIELD       = 'Field'
 TYPE_FUNCTION    = 'Function'
 TYPE_LIBRARY     = 'Library'
 TYPE_MODULE      = 'Module'
+TYPE_SECTION     = 'Section'
 TYPE_TYPE        = 'Type'
 TYPE_VALUE       = 'Value'
 
@@ -107,6 +109,16 @@ def handle_library(filename, library_name, soup):
 def handle_module(filename, module_name, soup):
     def anchor(id):
         return filename + '#' + id
+
+    for h2 in soup.find_all('h2', id=True):
+        section_name = h2.string
+        add_index(f'{module_name} — {section_name}', TYPE_SECTION, anchor(h2['id']))
+        h2.insert_before(anchor_element(soup, TYPE_SECTION, section_name))
+
+    for h3 in soup.find_all('h3', id=True):
+        sub_section_name = h3.string
+        add_index(f'{module_name} —— {sub_section_name}', TYPE_SECTION, anchor(h3['id']))
+        h3.insert_before(anchor_element(soup, TYPE_SECTION, sub_section_name))
 
     for span in soup.find_all('span', id=True):
         spanid = span['id']
