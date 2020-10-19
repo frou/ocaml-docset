@@ -107,15 +107,23 @@ def handle_module(filename, module_name, soup):
     def anchor(id):
         return filename + '#' + id
 
-    for h2 in soup.find_all('h2', id=True):
-        section_name = h2.string
-        add_index(f'{module_name} — {section_name}', TYPE_SECTION, anchor(h2['id']))
-        h2.insert_before(anchor_element(soup, TYPE_SECTION, section_name))
+    major_section = None
+    for section_header in soup.find_all(['h2', 'h3']):
+        if section_header.name == 'h2':
+            major_section = section_header.string
+            add_index(f'{module_name} — {major_section}', TYPE_SECTION, anchor(section_header['id']))
+            section_header.insert_before(anchor_element(soup, TYPE_SECTION, major_section))
+        elif section_header.name == 'h3':
+            minor_section = section_header.string
 
-    for h3 in soup.find_all('h3', id=True):
-        sub_section_name = h3.string
-        add_index(f'{module_name} —— {sub_section_name}', TYPE_SECTION, anchor(h3['id']))
-        h3.insert_before(anchor_element(soup, TYPE_SECTION, sub_section_name))
+            parent_section_indicator = ""
+            if major_section is None:
+                print(f'WARN: minor section ({minor_section}) not preceded by major: {filename}')
+            else:
+                parent_section_indicator = f' — {major_section}'
+
+            add_index(f'{module_name}{parent_section_indicator} — {minor_section}', TYPE_SECTION, anchor(section_header['id']))
+            section_header.insert_before(anchor_element(soup, TYPE_SECTION, f'\t{minor_section}'))
 
     for span in soup.find_all('span', id=True):
         spanid = span['id']
