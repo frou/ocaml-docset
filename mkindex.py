@@ -47,8 +47,23 @@ def run(filename, file_path):
 
     if h1_content[0].startswith('Module') or h1_content[0].startswith('Functor'):
         module_name = h1_content[1]
-        if module_name == "Pervasives" or module_name.startswith("Stdlib."):
+
+        # Don't process some modules that cause effective duplicates to be inserted into
+        # the Index. Otherwise searching for e.g. "at_exit" will show 3 results which
+        # are no different from each other:
+        #
+        #   * Stdlib.at_exit
+        #   * Pervasives.at_exit
+        #   * Stdlib.Pervasives.at_exit
+        #
+        # "Pervasives" was superseded by "Stdlib" in OCaml 4.07 and deprecated in 4.08.
+        if (module_name == "Pervasives" or module_name.startswith("Pervasives.")
+        # The modules mentioned below aren't themselves excluded from processing, but
+        # rather the re-exported modules nested inside them (notice trailing dot).
+        or module_name.startswith("Stdlib.")
+        or module_name.startswith("StdLabels.")):
             return soup, []
+
         add_index(module_name, TYPE_MODULE, filename)
         handle_module(filename, module_name, soup)
         return soup, []
