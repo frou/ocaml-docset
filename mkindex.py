@@ -156,7 +156,10 @@ def handle_module(filename, module_name, soup):
             name = spanid[7:]
             # this can either be a constructor or a record field
             # full_code = ' '.join(span.parent.stripped_strings)
-            if name.split('.')[-1][0].islower():
+            if module_name == 'Bool' and name in ['t.false', 't.true']:
+                # The bool variant type has unusual constructors (they start with a lowercase letter).
+                typ = TYPE_CONSTRUCTOR
+            elif name.split('.')[-1][0].islower():
                 typ = TYPE_FIELD
             else:
                 typ = TYPE_CONSTRUCTOR
