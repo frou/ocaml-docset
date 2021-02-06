@@ -1,10 +1,12 @@
-TARGET = target
 DOCSET_NAME = ocaml-unofficial
 OCAML_VERSION = 4.11
 OCAML_MANUAL_BASENAME = ocaml-$(OCAML_VERSION)-refman-html.tar.gz
 ORIGINAL_DOC_URL = https://caml.inria.fr/distrib/ocaml-$(OCAML_VERSION)/$(OCAML_MANUAL_BASENAME)
 
-ORIGINAL_DOC = files/$(OCAML_MANUAL_BASENAME)
+DOWNLOADS = downloads
+TARGET = target
+
+ORIGINAL_DOC = $(DOWNLOADS)/$(OCAML_MANUAL_BASENAME)
 TAR_NAME = $(TARGET)/ocaml-unofficial.tgz
 ROOT = $(TARGET)/$(DOCSET_NAME).docset
 RESOURCES = $(ROOT)/Contents/Resources
@@ -22,7 +24,7 @@ $(CONTENTS):
 download: $(ORIGINAL_DOC)
 
 $(ORIGINAL_DOC):
-	mkdir -p files
+	mkdir -p $(DOWNLOADS)
 	curl -L -o "$@" "$(ORIGINAL_DOC_URL)"
 
 extract: $(ORIGINAL_DOC)
@@ -54,7 +56,7 @@ clean: clean-target
 	@echo "Run 'make clean-all' to remove downloaded files and python virtual environment as well."
 
 clean-all: clean-target
-	rm -rf files
+	rm -rf $(DOWNLOADS)
 	rm -rf $(VENV_PATH)
 
 .PHONY: all clean clean-all clean-target copy docset download extra-files extract mkindex
