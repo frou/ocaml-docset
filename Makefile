@@ -1,6 +1,6 @@
 TARGET = target
 DOCSET_NAME = ocaml-unofficial
-OCAML_VERSION = 4.10
+OCAML_VERSION = 4.11
 OCAML_MANUAL_BASENAME = ocaml-$(OCAML_VERSION)-refman-html.tar.gz
 ORIGINAL_DOC_URL = https://caml.inria.fr/distrib/ocaml-$(OCAML_VERSION)/$(OCAML_MANUAL_BASENAME)
 
