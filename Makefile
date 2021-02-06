@@ -1,18 +1,18 @@
-DOCSET_NAME = ocaml-unofficial
-OCAML_VERSION = 4.11
+DOCSET_NAME           = ocaml-unofficial
+OCAML_VERSION         = 4.11
 OCAML_MANUAL_BASENAME = ocaml-$(OCAML_VERSION)-refman-html.tar.gz
-ORIGINAL_DOC_URL = https://caml.inria.fr/distrib/ocaml-$(OCAML_VERSION)/$(OCAML_MANUAL_BASENAME)
+ORIGINAL_DOC_URL      = https://caml.inria.fr/distrib/ocaml-$(OCAML_VERSION)/$(OCAML_MANUAL_BASENAME)
 
 DOWNLOADS = downloads
 GENERATED = generated
 
 ORIGINAL_DOC = $(DOWNLOADS)/$(OCAML_MANUAL_BASENAME)
-TAR_NAME = $(GENERATED)/ocaml-unofficial.tgz
-ROOT = $(GENERATED)/$(DOCSET_NAME).docset
-RESOURCES = $(ROOT)/Contents/Resources
-CONTENTS = $(RESOURCES)/Documents
+TAR_NAME     = $(GENERATED)/ocaml-unofficial.tgz
+ROOT         = $(GENERATED)/$(DOCSET_NAME).docset
+RESOURCES    = $(ROOT)/Contents/Resources
+CONTENTS     = $(RESOURCES)/Documents
 
-VENV_PATH = .venv
+VENV_PATH     = .venv
 VENV_ACTIVATE = source $(VENV_PATH)/bin/activate
 
 all: docset $(TAR_NAME)
