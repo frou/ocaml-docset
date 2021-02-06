@@ -1,10 +1,13 @@
 # OCaml docset for Dash
 
-This is an updated OCaml docset for [Dash](https://kapeli.com/dash).
+This is an improved OCaml docset for [Dash](https://kapeli.com/dash).
 
-## Building
+Compared to Dash's official docset for OCaml, this one is more up-to-date and has accuracy and usability improvements.
 
-    make
+## Generating
 
-These commands will download the required reference manual file and create the
-output docset and tarball in the `./target/` subfolder.
+Run `make` and the official reference manual will automatically be downloaded, and then transformed into `./generated/ocaml-unofficial.docset`
+
+## Installing
+
+In the Dash application, choose `Preferences > Docsets > [+] > Add Local Docset` and select the generated docset mentioned above.
