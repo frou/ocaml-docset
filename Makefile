@@ -1,8 +1,10 @@
 TARGET = target
 DOCSET_NAME = ocaml-unofficial
-ORIGINAL_DOC_URL = https://caml.inria.fr/distrib/ocaml-4.10/ocaml-4.10-refman-html.tar.gz
+OCAML_VERSION = 4.10
+OCAML_MANUAL_BASENAME = ocaml-$(OCAML_VERSION)-refman-html.tar.gz
+ORIGINAL_DOC_URL = https://caml.inria.fr/distrib/ocaml-$(OCAML_VERSION)/$(OCAML_MANUAL_BASENAME)
 
-ORIGINAL_DOC = files/ocaml-4.10-refman-html.tar.gz
+ORIGINAL_DOC = files/$(OCAML_MANUAL_BASENAME)
 TAR_NAME = $(TARGET)/ocaml-unofficial.tgz
 ROOT = $(TARGET)/$(DOCSET_NAME).docset
 RESOURCES = $(ROOT)/Contents/Resources

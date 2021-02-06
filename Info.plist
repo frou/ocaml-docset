@@ -5,7 +5,7 @@
     <key>CFBundleIdentifier</key>
     <string>ocaml-unofficial</string>
     <key>CFBundleName</key>
-    <string>OCaml 4.10.0 (Unofficial)</string>
+    <string>OCaml (Unofficial)</string>
     <key>DocSetPlatformFamily</key>
     <string>ocaml</string>
     <key>isDashDocset</key>
