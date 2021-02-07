@@ -49,12 +49,12 @@ $(PYTHON_VENV_PATH):
 
 # ------------------------------------------------------------
 
-clean-generated:
-	rm -rf $(GENERATED)
-
 clean: clean-generated
 	@echo "Removing only generated files."
 	@echo "Run 'make clean-all' to also remove downloaded files and the python virtual environment."
+
+clean-generated:
+	rm -rf $(GENERATED)
 
 clean-all: clean-generated
 	rm -rf $(DOWNLOADS)
@@ -62,4 +62,4 @@ clean-all: clean-generated
 
 # ------------------------------------------------------------
 
-.PHONY: clean clean-all clean-generated
+.PHONY: clean clean-generated clean-all
