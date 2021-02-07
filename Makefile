@@ -22,8 +22,6 @@ PYTHON_VENV_ACTIVATE = source $(PYTHON_VENV_PATH)/bin/activate
 
 # ------------------------------------------------------------
 
-all: $(DOCSET_ARCHIVE_PATH)
-
 $(DOCSET_ARCHIVE_PATH): $(DOCSET_PATH)
 	tar --exclude=.DS_Store --strip-components 1 -czf $@ $<
 
@@ -64,4 +62,4 @@ clean-all: clean-generated
 
 # ------------------------------------------------------------
 
-.PHONY: all clean clean-all clean-generated
+.PHONY: clean clean-all clean-generated
