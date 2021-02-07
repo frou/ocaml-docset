@@ -22,6 +22,9 @@ PYTHON_VENV_ACTIVATE = source $(PYTHON_VENV_PATH)/bin/activate
 
 all: $(DOCSET_ARCHIVE_PATH)
 
+$(DOCSET_ARCHIVE_PATH): $(DOCSET_PATH)
+	tar --exclude=.DS_Store --strip-components 1 -czf $@ $<
+
 $(DOCSET_PATH): mkindex
 	cp Info.plist $(DOCSET_CONTENTS_PATH)
 
@@ -45,9 +48,6 @@ $(PYTHON_VENV_PATH):
 
 mkindex: copy $(PYTHON_VENV_PATH)
 	$(PYTHON_VENV_ACTIVATE) && ./mkindex.py $(MANUAL_UNPACKED_PATH) $(DOCSET_RESOURCES_PATH)
-
-$(DOCSET_ARCHIVE_PATH): $(DOCSET_PATH)
-	tar --exclude=.DS_Store --strip-components 1 -czf $@ $<
 
 # ------------------------------------------------------------
 
