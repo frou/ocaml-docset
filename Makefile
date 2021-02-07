@@ -1,4 +1,3 @@
-DOCSET_NAME   = ocaml-unofficial
 OCAML_VERSION = 4.11
 
 DOWNLOADS = downloads
@@ -9,7 +8,8 @@ MANUAL_URL           = https://caml.inria.fr/distrib/ocaml-$(OCAML_VERSION)/$(MA
 MANUAL_PACKED_PATH   = $(DOWNLOADS)/$(MANUAL_BASENAME)
 MANUAL_UNPACKED_PATH = $(DOWNLOADS)/$(OCAML_VERSION)
 
-TAR_NAME     = $(GENERATED)/ocaml-unofficial.tgz
+DOCSET_NAME   = ocaml-unofficial
+TAR_NAME     = $(GENERATED)/$(DOCSET_NAME).tgz
 ROOT         = $(GENERATED)/$(DOCSET_NAME).docset
 RESOURCES    = $(ROOT)/Contents/Resources
 CONTENTS     = $(RESOURCES)/Documents
