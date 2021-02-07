@@ -20,8 +20,10 @@ DOCSET_ARCHIVE_PATH    = $(GENERATED)/$(DOCSET_BASENAME_NO_EXT).tgz
 PYTHON_VENV_PATH     = .venv
 PYTHON_VENV_ACTIVATE = source $(PYTHON_VENV_PATH)/bin/activate
 
-all: docset $(DOCSET_ARCHIVE_PATH)
-docset: mkindex extra-files
+all: $(DOCSET_ARCHIVE_PATH)
+
+$(DOCSET_PATH): mkindex
+	cp Info.plist $(DOCSET_CONTENTS_PATH)
 
 $(DOCSET_DOCUMENTS_PATH):
 	mkdir -p $@
@@ -44,11 +46,8 @@ $(PYTHON_VENV_PATH):
 mkindex: copy $(PYTHON_VENV_PATH)
 	$(PYTHON_VENV_ACTIVATE) && ./mkindex.py $(MANUAL_UNPACKED_PATH) $(DOCSET_RESOURCES_PATH)
 
-$(DOCSET_ARCHIVE_PATH): docset
-	tar --exclude=.DS_Store --strip-components 1 -czf $@ $(DOCSET_PATH)
-
-extra-files:
-	cp Info.plist $(DOCSET_CONTENTS_PATH)
+$(DOCSET_ARCHIVE_PATH): $(DOCSET_PATH)
+	tar --exclude=.DS_Store --strip-components 1 -czf $@ $<
 
 # ------------------------------------------------------------
 
@@ -65,4 +64,4 @@ clean-all: clean-generated
 
 # ------------------------------------------------------------
 
-.PHONY: all clean clean-all clean-generated copy docset extra-files extract mkindex
+.PHONY: all clean clean-all clean-generated copy extract mkindex
