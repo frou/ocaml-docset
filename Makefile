@@ -20,32 +20,34 @@ DOCSET_ARCHIVE_PATH    = $(GENERATED)/$(DOCSET_BASENAME_NO_EXT).tgz
 PYTHON_VENV_PATH     = .venv
 PYTHON_VENV_ACTIVATE = source $(PYTHON_VENV_PATH)/bin/activate
 
+# ------------------------------------------------------------
+
 all: $(DOCSET_ARCHIVE_PATH)
 
 $(DOCSET_ARCHIVE_PATH): $(DOCSET_PATH)
 	tar --exclude=.DS_Store --strip-components 1 -czf $@ $<
 
-$(DOCSET_PATH): mkindex
+$(DOCSET_PATH): $(MANUAL_PACKED_PATH) $(PYTHON_VENV_PATH)
+	# Extract the HTML manual
+	mkdir -p $(MANUAL_UNPACKED_PATH)
+	tar xf $(MANUAL_PACKED_PATH) -C $(MANUAL_UNPACKED_PATH)
+
+	# Copy the HTML manual
+	mkdir -p $(DOCSET_DOCUMENTS_PATH)
+	cp -a $(MANUAL_UNPACKED_PATH)/htmlman $(DOCSET_DOCUMENTS_PATH)
+
+	# Index the HTML manual, and insert anchor tags into it
+	$(PYTHON_VENV_ACTIVATE) && ./mkindex.py $(MANUAL_UNPACKED_PATH) $(DOCSET_RESOURCES_PATH)
+
 	cp Info.plist $(DOCSET_CONTENTS_PATH)
 
 $(MANUAL_PACKED_PATH):
 	mkdir -p $(DOWNLOADS)
 	curl -L -o "$@" "$(MANUAL_URL)"
 
-extract-manual: $(MANUAL_PACKED_PATH)
-	mkdir -p $(MANUAL_UNPACKED_PATH)
-	tar xf $(MANUAL_PACKED_PATH) -C $(MANUAL_UNPACKED_PATH)
-
-copy-manual: extract-manual
-	mkdir -p $(DOCSET_DOCUMENTS_PATH)
-	cp -a $(MANUAL_UNPACKED_PATH)/htmlman $(DOCSET_DOCUMENTS_PATH)
-
 $(PYTHON_VENV_PATH):
 	python3 -m venv "$@"
 	$(PYTHON_VENV_ACTIVATE) && pip install -r requirements.txt
-
-mkindex: copy-manual $(PYTHON_VENV_PATH)
-	$(PYTHON_VENV_ACTIVATE) && ./mkindex.py $(MANUAL_UNPACKED_PATH) $(DOCSET_RESOURCES_PATH)
 
 # ------------------------------------------------------------
 
@@ -62,4 +64,4 @@ clean-all: clean-generated
 
 # ------------------------------------------------------------
 
-.PHONY: all clean clean-all clean-generated extract-manual copy-manual mkindex
+.PHONY: all clean clean-all clean-generated
