@@ -32,11 +32,11 @@ $(MANUAL_PACKED_PATH):
 	mkdir -p $(DOWNLOADS)
 	curl -L -o "$@" "$(MANUAL_URL)"
 
-extract: $(MANUAL_PACKED_PATH)
+extract-manual: $(MANUAL_PACKED_PATH)
 	mkdir -p $(MANUAL_UNPACKED_PATH)
 	tar xf $(MANUAL_PACKED_PATH) -C $(MANUAL_UNPACKED_PATH)
 
-copy: extract
+copy-manual: extract-manual
 	mkdir -p $(DOCSET_DOCUMENTS_PATH)
 	cp -a $(MANUAL_UNPACKED_PATH)/htmlman $(DOCSET_DOCUMENTS_PATH)
 
@@ -44,7 +44,7 @@ $(PYTHON_VENV_PATH):
 	python3 -m venv "$@"
 	$(PYTHON_VENV_ACTIVATE) && pip install -r requirements.txt
 
-mkindex: copy $(PYTHON_VENV_PATH)
+mkindex: copy-manual $(PYTHON_VENV_PATH)
 	$(PYTHON_VENV_ACTIVATE) && ./mkindex.py $(MANUAL_UNPACKED_PATH) $(DOCSET_RESOURCES_PATH)
 
 # ------------------------------------------------------------
@@ -62,4 +62,4 @@ clean-all: clean-generated
 
 # ------------------------------------------------------------
 
-.PHONY: all clean clean-all clean-generated copy extract mkindex
+.PHONY: all clean clean-all clean-generated extract-manual copy-manual mkindex
