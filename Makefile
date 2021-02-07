@@ -43,10 +43,10 @@ $(DOCSET_PATH): $(MANUAL_PACKED_PATH) $(PYTHON_VENV_PATH)
 
 $(MANUAL_PACKED_PATH):
 	mkdir -p $(DOWNLOADS)
-	curl -L -o "$@" "$(MANUAL_URL)"
+	curl -L -o $@ $(MANUAL_URL)
 
 $(PYTHON_VENV_PATH):
-	python3 -m venv "$@"
+	python3 -m venv $@
 	$(PYTHON_VENV_ACTIVATE) && pip install -r requirements.txt
 
 # ------------------------------------------------------------
