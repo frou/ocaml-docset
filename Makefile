@@ -26,8 +26,6 @@ docset: mkindex extra-files
 $(DOCSET_DOCUMENTS_PATH):
 	mkdir -p $@
 
-download: $(MANUAL_PACKED_PATH)
-
 $(MANUAL_PACKED_PATH):
 	mkdir -p $(DOWNLOADS)
 	curl -L -o "$@" "$(MANUAL_URL)"
@@ -67,4 +65,4 @@ clean-all: clean-generated
 
 # ------------------------------------------------------------
 
-.PHONY: all clean clean-all clean-generated copy docset download extra-files extract mkindex
+.PHONY: all clean clean-all clean-generated copy docset extra-files extract mkindex
