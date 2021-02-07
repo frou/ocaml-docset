@@ -1,21 +1,21 @@
 OCAML_VERSION = 4.11
 
-DOWNLOADS = downloads
-GENERATED = generated
+DOWNLOADS_PATH = downloads
+GENERATED_PATH = generated
 
 MANUAL_BASENAME      = ocaml-$(OCAML_VERSION)-refman-html.tar.gz
 MANUAL_URL           = https://caml.inria.fr/distrib/ocaml-$(OCAML_VERSION)/$(MANUAL_BASENAME)
-MANUAL_PACKED_PATH   = $(DOWNLOADS)/$(MANUAL_BASENAME)
-MANUAL_UNPACKED_PATH = $(DOWNLOADS)/$(OCAML_VERSION)
+MANUAL_PACKED_PATH   = $(DOWNLOADS_PATH)/$(MANUAL_BASENAME)
+MANUAL_UNPACKED_PATH = $(DOWNLOADS_PATH)/$(OCAML_VERSION)
 
 DOCSET_BASENAME_NO_EXT = ocaml-unofficial
 DOCSET_BASENAME        = $(DOCSET_BASENAME_NO_EXT).docset
-DOCSET_PATH            = $(GENERATED)/$(DOCSET_BASENAME)
+DOCSET_PATH            = $(GENERATED_PATH)/$(DOCSET_BASENAME)
 DOCSET_CONTENTS_PATH   = $(DOCSET_PATH)/Contents
 DOCSET_RESOURCES_PATH  = $(DOCSET_CONTENTS_PATH)/Resources
 DOCSET_DOCUMENTS_PATH  = $(DOCSET_RESOURCES_PATH)/Documents
 # The archive is for (optional) distribution: https://kapeli.com/docsets#dashdocsetfeed
-DOCSET_ARCHIVE_PATH    = $(GENERATED)/$(DOCSET_BASENAME_NO_EXT).tgz
+DOCSET_ARCHIVE_PATH    = $(GENERATED_PATH)/$(DOCSET_BASENAME_NO_EXT).tgz
 
 PYTHON_VENV_PATH     = .venv
 PYTHON_VENV_ACTIVATE = source $(PYTHON_VENV_PATH)/bin/activate
@@ -40,7 +40,7 @@ $(DOCSET_PATH): $(MANUAL_PACKED_PATH) $(PYTHON_VENV_PATH)
 	cp Info.plist $(DOCSET_CONTENTS_PATH)
 
 $(MANUAL_PACKED_PATH):
-	mkdir -p $(DOWNLOADS)
+	mkdir -p $(DOWNLOADS_PATH)
 	curl -L -o $@ $(MANUAL_URL)
 
 $(PYTHON_VENV_PATH):
@@ -54,10 +54,10 @@ clean: clean-generated
 	@echo "Only generated files were removed. Run 'make clean-all' if you also want to remove downloaded files and the Python virtual environment."
 
 clean-generated:
-	rm -rf $(GENERATED)
+	rm -rf $(GENERATED_PATH)
 
 clean-all: clean-generated
-	rm -rf $(DOWNLOADS)
+	rm -rf $(DOWNLOADS_PATH)
 	rm -rf $(PYTHON_VENV_PATH)
 
 # ------------------------------------------------------------
