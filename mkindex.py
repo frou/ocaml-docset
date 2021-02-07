@@ -61,10 +61,13 @@ def run(filename, file_path):
         #
         # "Pervasives" was superseded by "Stdlib" in OCaml 4.07 and deprecated in 4.08.
         if (module_name == "Pervasives" or module_name.startswith("Pervasives.")
-        # The modules mentioned below aren't themselves excluded from processing, but
-        # rather the re-exported modules nested inside them (notice trailing dot).
+        # These modules aren't themselves excluded from processing, but rather the
+        # modules nested inside them (note the trailing dots). This is because those
+        # nested modules will already be processed using their short names.
         or module_name.startswith("Stdlib.")
-        or module_name.startswith("StdLabels.")):
+        or module_name.startswith("StdLabels.")
+        # These modules are billed as "for system use only":
+        or module_name.startswith("Camlinternal")):
             return soup, []
 
         add_index(module_name, TYPE_MODULE, filename)
