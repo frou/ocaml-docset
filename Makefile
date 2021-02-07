@@ -28,9 +28,6 @@ $(DOCSET_ARCHIVE_PATH): $(DOCSET_PATH)
 $(DOCSET_PATH): mkindex
 	cp Info.plist $(DOCSET_CONTENTS_PATH)
 
-$(DOCSET_DOCUMENTS_PATH):
-	mkdir -p $@
-
 $(MANUAL_PACKED_PATH):
 	mkdir -p $(DOWNLOADS)
 	curl -L -o "$@" "$(MANUAL_URL)"
@@ -39,7 +36,8 @@ extract: $(MANUAL_PACKED_PATH)
 	mkdir -p $(MANUAL_UNPACKED_PATH)
 	tar xf $(MANUAL_PACKED_PATH) -C $(MANUAL_UNPACKED_PATH)
 
-copy: extract $(DOCSET_DOCUMENTS_PATH)
+copy: extract
+	mkdir -p $(DOCSET_DOCUMENTS_PATH)
 	cp -a $(MANUAL_UNPACKED_PATH)/htmlman $(DOCSET_DOCUMENTS_PATH)
 
 $(PYTHON_VENV_PATH):
