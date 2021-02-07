@@ -8,14 +8,14 @@ MANUAL_URL           = https://caml.inria.fr/distrib/ocaml-$(OCAML_VERSION)/$(MA
 MANUAL_PACKED_PATH   = $(DOWNLOADS)/$(MANUAL_BASENAME)
 MANUAL_UNPACKED_PATH = $(DOWNLOADS)/$(OCAML_VERSION)
 
-DOCSET_NAME_NO_EXT    = ocaml-unofficial
-DOCSET_NAME           = $(DOCSET_NAME_NO_EXT).docset
-DOCSET_PATH           = $(GENERATED)/$(DOCSET_NAME)
-DOCSET_CONTENTS_PATH  = $(DOCSET_PATH)/Contents
-DOCSET_RESOURCES_PATH = $(DOCSET_CONTENTS_PATH)/Resources
-DOCSET_DOCUMENTS_PATH = $(DOCSET_RESOURCES_PATH)/Documents
+DOCSET_BASENAME_NO_EXT = ocaml-unofficial
+DOCSET_BASENAME        = $(DOCSET_BASENAME_NO_EXT).docset
+DOCSET_PATH            = $(GENERATED)/$(DOCSET_BASENAME)
+DOCSET_CONTENTS_PATH   = $(DOCSET_PATH)/Contents
+DOCSET_RESOURCES_PATH  = $(DOCSET_CONTENTS_PATH)/Resources
+DOCSET_DOCUMENTS_PATH  = $(DOCSET_RESOURCES_PATH)/Documents
 # The archive is for (optional) distribution: https://kapeli.com/docsets#dashdocsetfeed
-DOCSET_ARCHIVE_PATH   = $(GENERATED)/$(DOCSET_NAME_NO_EXT).tgz
+DOCSET_ARCHIVE_PATH   = $(GENERATED)/$(DOCSET_BASENAME_NO_EXT).tgz
 
 PYTHON_VENV_PATH     = .venv
 PYTHON_VENV_ACTIVATE = source $(PYTHON_VENV_PATH)/bin/activate
@@ -48,7 +48,7 @@ mkindex: copy $(PYTHON_VENV_PATH)
 	$(PYTHON_VENV_ACTIVATE) && ./mkindex.py $(MANUAL_UNPACKED_PATH) $(DOCSET_RESOURCES_PATH)
 
 $(DOCSET_ARCHIVE_PATH): docset
-	tar --exclude=.DS_Store -czf $@ -C $(GENERATED) $(DOCSET_NAME)
+	tar --exclude=.DS_Store -czf $@ -C $(GENERATED) $(DOCSET_BASENAME)
 
 extra-files:
 	cp Info.plist $(DOCSET_CONTENTS_PATH)
