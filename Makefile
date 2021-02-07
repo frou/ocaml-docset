@@ -8,19 +8,22 @@ MANUAL_URL           = https://caml.inria.fr/distrib/ocaml-$(OCAML_VERSION)/$(MA
 MANUAL_PACKED_PATH   = $(DOWNLOADS)/$(MANUAL_BASENAME)
 MANUAL_UNPACKED_PATH = $(DOWNLOADS)/$(OCAML_VERSION)
 
-DOCSET_NAME   = ocaml-unofficial
-TAR_NAME     = $(GENERATED)/$(DOCSET_NAME).tgz
-ROOT         = $(GENERATED)/$(DOCSET_NAME).docset
-RESOURCES    = $(ROOT)/Contents/Resources
-CONTENTS     = $(RESOURCES)/Documents
+DOCSET_NAME_NO_EXT    = ocaml-unofficial
+DOCSET_NAME           = $(DOCSET_NAME_NO_EXT).docset
+DOCSET_PATH           = $(GENERATED)/$(DOCSET_NAME)
+DOCSET_CONTENTS_PATH  = $(DOCSET_PATH)/Contents
+DOCSET_RESOURCES_PATH = $(DOCSET_CONTENTS_PATH)/Resources
+DOCSET_DOCUMENTS_PATH = $(DOCSET_RESOURCES_PATH)/Documents
+# The archive is for (optional) distribution: https://kapeli.com/docsets#dashdocsetfeed
+DOCSET_ARCHIVE_PATH   = $(GENERATED)/$(DOCSET_NAME_NO_EXT).tgz
 
-VENV_PATH     = .venv
-VENV_ACTIVATE = source $(VENV_PATH)/bin/activate
+PYTHON_VENV_PATH     = .venv
+PYTHON_VENV_ACTIVATE = source $(PYTHON_VENV_PATH)/bin/activate
 
-all: docset $(TAR_NAME)
+all: docset $(DOCSET_ARCHIVE_PATH)
 docset: mkindex extra-files
 
-$(CONTENTS):
+$(DOCSET_DOCUMENTS_PATH):
 	mkdir -p $@
 
 download: $(MANUAL_PACKED_PATH)
@@ -33,22 +36,22 @@ extract: $(MANUAL_PACKED_PATH)
 	mkdir -p $(MANUAL_UNPACKED_PATH)
 	tar xf $(MANUAL_PACKED_PATH) -C $(MANUAL_UNPACKED_PATH)
 
-copy: extract $(CONTENTS)
-	mkdir -p $(CONTENTS)
-	cp -a $(MANUAL_UNPACKED_PATH)/htmlman $(CONTENTS)
+copy: extract $(DOCSET_DOCUMENTS_PATH)
+	mkdir -p $(DOCSET_DOCUMENTS_PATH)
+	cp -a $(MANUAL_UNPACKED_PATH)/htmlman $(DOCSET_DOCUMENTS_PATH)
 
-$(VENV_PATH):
+$(PYTHON_VENV_PATH):
 	python3 -m venv "$@"
-	$(VENV_ACTIVATE) && pip install -r requirements.txt
+	$(PYTHON_VENV_ACTIVATE) && pip install -r requirements.txt
 
-mkindex: copy $(VENV_PATH)
-	$(VENV_ACTIVATE) && ./mkindex.py $(MANUAL_UNPACKED_PATH) $(RESOURCES)
+mkindex: copy $(PYTHON_VENV_PATH)
+	$(PYTHON_VENV_ACTIVATE) && ./mkindex.py $(MANUAL_UNPACKED_PATH) $(DOCSET_RESOURCES_PATH)
 
-$(TAR_NAME): docset
-	tar --exclude=.DS_Store -czf $@ -C $(GENERATED) $(DOCSET_NAME).docset
+$(DOCSET_ARCHIVE_PATH): docset
+	tar --exclude=.DS_Store -czf $@ -C $(GENERATED) $(DOCSET_NAME)
 
 extra-files:
-	cp Info.plist $(ROOT)/Contents/
+	cp Info.plist $(DOCSET_CONTENTS_PATH)
 
 # ------------------------------------------------------------
 
@@ -61,7 +64,7 @@ clean: clean-generated
 
 clean-all: clean-generated
 	rm -rf $(DOWNLOADS)
-	rm -rf $(VENV_PATH)
+	rm -rf $(PYTHON_VENV_PATH)
 
 # ------------------------------------------------------------
 
