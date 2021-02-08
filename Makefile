@@ -27,10 +27,10 @@ PYTHON_VENV_ACTIVATE = source $(PYTHON_VENV_PATH)/bin/activate
 # ------------------------------------------------------------
 
 # The archive is for (optional) distribution: https://kapeli.com/docsets#dashdocsetfeed
-$(DOCSET_ARCHIVE_PATH): $(DOCSET_PATH)
-	tar --exclude=.DS_Store --strip-components 1 -czf $@ $<
+$(DOCSET_ARCHIVE_PATH): docset
+	tar --exclude=.DS_Store --strip-components 1 -czf $@ $(DOCSET_PATH)
 
-$(DOCSET_PATH): $(MANUAL_PACKED_PATH) $(PYTHON_VENV_PATH)
+docset: $(MANUAL_PACKED_PATH) $(PYTHON_VENV_PATH)
 	# Extract the HTML manual
 	mkdir -p $(MANUAL_UNPACKED_PATH)
 	tar xf $< -C $(MANUAL_UNPACKED_PATH)
@@ -68,4 +68,4 @@ clean-all: clean-generated
 
 # ------------------------------------------------------------
 
-.PHONY: clean clean-generated clean-all
+.PHONY: docset clean clean-generated clean-all
