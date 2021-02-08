@@ -6,6 +6,8 @@ Compared to Dash's official docset for OCaml, this one is more up-to-date and ha
 
 ## Generating
 
+You must have `python3` installed.
+
 Run `make` and the official reference manual will automatically be downloaded, and then transformed into `./generated/ocaml-unofficial.docset`
 
 ## Installing
