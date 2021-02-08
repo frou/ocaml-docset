@@ -4,7 +4,7 @@ DOWNLOADS_PATH = downloads
 GENERATED_PATH = generated
 
 MANUAL_BASENAME           = ocaml-$(OCAML_VERSION)-refman-html.tar.gz
-MANUAL_URL                = https://caml.inria.fr/distrib/ocaml-$(OCAML_VERSION)/$(MANUAL_BASENAME)
+MANUAL_URL                = https://ocaml.org/releases/$(OCAML_VERSION)/$(MANUAL_BASENAME)
 MANUAL_PACKED_PATH        = $(DOWNLOADS_PATH)/$(MANUAL_BASENAME)
 MANUAL_UNPACKED_PATH      = $(DOWNLOADS_PATH)/$(OCAML_VERSION)
 MANUAL_CONTAINER_BASENAME = htmlman
