@@ -190,16 +190,15 @@ def handle_module(filename, module_name, soup):
 
 if __name__ == '__main__':
     import glob
-    import shutil
     import sys
     import traceback
 
     _, manual_unpacked_path, docset_documents_path, docset_indexdb_path = sys.argv
 
-    files = glob.glob(manual_unpacked_path + '/**/*.html', recursive=True)
+    all_html_paths = glob.glob(manual_unpacked_path + '/**/*.html', recursive=True)
     # Ignore files related to the compiler's own library.
     # "Warning: This library is part of the internal OCaml compiler API, and is not the language standard library."
-    files = [f for f in files if not fnmatch(f, "**/compilerlibref/*")]
+    all_html_paths = [p for p in all_html_paths if not fnmatch(p, "**/compilerlibref/*")]
 
     if os.path.isfile(docset_indexdb_path):
         os.unlink(docset_indexdb_path)
@@ -209,19 +208,15 @@ if __name__ == '__main__':
     c.execute('''CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path)''')
     conn.commit()
 
-    for filename in files:
-        relname = os.path.relpath(filename, start=manual_unpacked_path)
+    for html_path in all_html_paths:
+        html_relative_path = os.path.relpath(html_path, start=manual_unpacked_path)
         try:
-            output_filename = os.path.join(docset_documents_path, relname)
+            output_filename = os.path.join(docset_documents_path, html_relative_path)
             if not os.path.isdir(os.path.dirname(output_filename)):
                 os.makedirs(os.path.dirname(output_filename))
-            doc, entries = run(relname, filename)
+            doc, entries = run(html_relative_path, html_path)
             if doc is not None and doc.made_changes:
                 with open(output_filename, 'w') as f:
                     f.write(str(doc))
-            else:
-                # No need to copy, this has already been taken care of by make
-                # shutil.copy(filename, output_filename)
-                pass
         except:
             traceback.print_exc()
