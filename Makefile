@@ -33,20 +33,20 @@ PYTHON_VENV_ACTIVATE = source $(PYTHON_VENV_PATH)/bin/activate
 $(DOCSET_ARCHIVE_PATH): docset
 	tar --exclude=.DS_Store --strip-components 1 -czf $@ $(DOCSET_PATH)
 
-docset: $(MANUAL_PACKED_PATH) $(PYTHON_VENV_PATH)
-	# Extract the HTML manual
-	mkdir -p $(MANUAL_UNPACKED_PATH)
-	tar xf $< -C $(MANUAL_UNPACKED_PATH)
-
-	# Copy the HTML manual
+docset: $(MANUAL_UNPACKED_PATH) $(PYTHON_VENV_PATH)
+	# Copy the HTML manual into the docset
 	mkdir -p $(DOCSET_DOCUMENTS_PATH)
 	cp -a $(MANUAL_UNPACKED_PATH)/$(MANUAL_CONTAINER_BASENAME) $(DOCSET_DOCUMENTS_PATH)
 
-	# Index the HTML manual, and insert anchor tags into it
+	# Index the HTML manual, and insert anchor tags to enable page ToCs
 	$(PYTHON_VENV_ACTIVATE) && $(SCRIPTS_PATH)/mkindex $(MANUAL_UNPACKED_PATH) $(DOCSET_DOCUMENTS_PATH) $(DOCSET_INDEXDB_PATH)
 
 	# Create the Property List file that describes the docset
 	$(PYTHON_VENV_ACTIVATE) && $(SCRIPTS_PATH)/mkinfo $(DOCSET_BASENAME_NO_EXT) "$(DOCSET_READABLE_NAME)" $(DOCSET_SEARCH_KEYWORD) $(DOCSET_MAIN_PAGE) $(OCAML_RELEASE_URL) $(DOCSET_INFO_PATH)
+
+$(MANUAL_UNPACKED_PATH): $(MANUAL_PACKED_PATH)
+	mkdir -p $@
+	tar xf $< -C $@
 
 $(MANUAL_PACKED_PATH):
 	mkdir -p $(DOWNLOADS_PATH)
