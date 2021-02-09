@@ -5,7 +5,6 @@ import os
 import re
 import sqlite3
 import sys
-import traceback
 import urllib.parse
 from fnmatch import fnmatch
 
@@ -54,8 +53,8 @@ def run(filename, file_path):
     h1_content = list(h1.stripped_strings)
     libmatch = RE_LIBRARY_CHAPTER.fullmatch(" ".join(h1_content))
 
-    def anchor(id):
-        return filename + "#" + id
+    def anchor(id_):
+        return filename + "#" + id_
 
     if h1_content[0].startswith("Module") or h1_content[0].startswith("Functor"):
         module_name = h1_content[1]
@@ -96,8 +95,8 @@ def run(filename, file_path):
         return soup, []
 
 
-def anchor_element(soup, typ, id):
-    id_quoted = urllib.parse.quote(id, safe="")
+def anchor_element(soup, typ, id_):
+    id_quoted = urllib.parse.quote(id_, safe="")
     a = soup.new_tag("a")
     a.attrs["name"] = f"//apple_ref/cpp/{typ}/{id_quoted}"
     a.attrs["class"] = "dashAnchor"
@@ -110,14 +109,14 @@ RE_LIB_EXN = re.compile(r"exception ([a-zA-Z_][a-zA-Z0-9_]*)(?: of .+|)")
 
 
 def handle_library(filename, library_name, soup):
-    def anchor(id):
-        return filename + "#" + id
+    def anchor(id_):
+        return filename + "#" + id_
 
     next_id = {"id": 0}
 
     def autoid():
-        id, next_id["id"] = next_id["id"], next_id["id"] + 1
-        return f"autoid_{id:04x}"
+        id_, next_id["id"] = next_id["id"], next_id["id"] + 1
+        return f"autoid_{id_:04x}"
 
     def getid(element):
         if "id" not in element.attrs:
@@ -142,9 +141,9 @@ def handle_library(filename, library_name, soup):
             continue
 
 
-def handle_module(filename, module_name, soup):
-    def anchor(id):
-        return filename + "#" + id
+def handle_module(filename, module_name, soup):  # noqa: C901
+    def anchor(id_):
+        return filename + "#" + id_
 
     major_section = None
     for section_header in soup.find_all(["h2", "h3"]):
