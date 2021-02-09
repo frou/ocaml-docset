@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import glob
+import logging
 import os
 import re
 import sqlite3
@@ -9,6 +10,8 @@ import urllib.parse
 from fnmatch import fnmatch
 
 from bs4 import BeautifulSoup
+
+logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
 # REF: https://kapeli.com/docsets#supportedentrytypes
 TYPE_CONSTRUCTOR = "Constructor"
@@ -48,7 +51,7 @@ def run(filename, file_path):
     h1 = soup.find("h1")
     if h1 is None:
         if not os.path.basename(filename).startswith("type_"):
-            print("WARN: no h1: " + filename)
+            logging.info("no h1 in %s", filename)
         return soup, []
     h1_content = list(h1.stripped_strings)
     libmatch = RE_LIBRARY_CHAPTER.fullmatch(" ".join(h1_content))
@@ -91,7 +94,7 @@ def run(filename, file_path):
         return soup, []
     else:
         if not os.path.basename(filename).startswith("index_"):
-            print("WARN: no module: " + filename)
+            logging.info("no module in %s", filename)
         return soup, []
 
 
@@ -162,8 +165,10 @@ def handle_module(filename, module_name, soup):  # noqa: C901
 
             index_parent_section_prefix, toc_indent = "", ""
             if major_section is None:
-                print(
-                    f"WARN: minor section ({minor_section}) not preceded by major: {filename}"
+                logging.warning(
+                    "minor section (%s) not preceded by major in %s",
+                    minor_section,
+                    filename,
                 )
             else:
                 index_parent_section_prefix = f" — {major_section}"
