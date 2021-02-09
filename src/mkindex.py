@@ -4,6 +4,9 @@ import os
 import re
 import sqlite3
 import urllib.parse
+import glob
+import sys
+import traceback
 from fnmatch import fnmatch
 
 from bs4 import BeautifulSoup
@@ -188,35 +191,32 @@ def handle_module(filename, module_name, soup):
             span.parent.insert_before(anchor_element(soup, valtype, name))
             # print(list(span.parent.strings))
 
-if __name__ == '__main__':
-    import glob
-    import sys
-    import traceback
 
-    _, manual_unpacked_path, docset_documents_path, docset_indexdb_path = sys.argv
 
-    all_html_paths = glob.glob(manual_unpacked_path + '/**/*.html', recursive=True)
-    # Ignore files related to the compiler's own library.
-    # "Warning: This library is part of the internal OCaml compiler API, and is not the language standard library."
-    all_html_paths = [p for p in all_html_paths if not fnmatch(p, "**/compilerlibref/*")]
+_, manual_unpacked_path, docset_documents_path, docset_indexdb_path = sys.argv
 
-    if os.path.isfile(docset_indexdb_path):
-        os.unlink(docset_indexdb_path)
-    conn = sqlite3.connect(docset_indexdb_path)
-    c = conn.cursor()
-    c.execute('''CREATE TABLE searchIndex(id INTEGER PRIMARY KEY, name TEXT, type TEXT, path TEXT)''')
-    c.execute('''CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path)''')
-    conn.commit()
+all_html_paths = glob.glob(manual_unpacked_path + '/**/*.html', recursive=True)
+# Ignore files related to the compiler's own library.
+# "Warning: This library is part of the internal OCaml compiler API, and is not the language standard library."
+all_html_paths = [p for p in all_html_paths if not fnmatch(p, "**/compilerlibref/*")]
 
-    for html_path in all_html_paths:
-        html_relative_path = os.path.relpath(html_path, start=manual_unpacked_path)
-        try:
-            output_filename = os.path.join(docset_documents_path, html_relative_path)
-            if not os.path.isdir(os.path.dirname(output_filename)):
-                os.makedirs(os.path.dirname(output_filename))
-            doc, entries = run(html_relative_path, html_path)
-            if doc is not None and doc.made_changes:
-                with open(output_filename, 'w') as f:
-                    f.write(str(doc))
-        except:
-            traceback.print_exc()
+if os.path.isfile(docset_indexdb_path):
+    os.unlink(docset_indexdb_path)
+conn = sqlite3.connect(docset_indexdb_path)
+c = conn.cursor()
+c.execute('''CREATE TABLE searchIndex(id INTEGER PRIMARY KEY, name TEXT, type TEXT, path TEXT)''')
+c.execute('''CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path)''')
+conn.commit()
+
+for html_path in all_html_paths:
+    html_relative_path = os.path.relpath(html_path, start=manual_unpacked_path)
+    try:
+        output_filename = os.path.join(docset_documents_path, html_relative_path)
+        if not os.path.isdir(os.path.dirname(output_filename)):
+            os.makedirs(os.path.dirname(output_filename))
+        doc, entries = run(html_relative_path, html_path)
+        if doc is not None and doc.made_changes:
+            with open(output_filename, 'w') as f:
+                f.write(str(doc))
+    except:
+        traceback.print_exc()
