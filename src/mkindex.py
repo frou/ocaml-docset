@@ -210,13 +210,12 @@ conn.commit()
 
 for html_path in all_html_paths:
     html_relative_path = os.path.relpath(html_path, start=manual_unpacked_path)
-    try:
-        output_filename = os.path.join(docset_documents_path, html_relative_path)
-        if not os.path.isdir(os.path.dirname(output_filename)):
-            os.makedirs(os.path.dirname(output_filename))
-        doc, entries = run(html_relative_path, html_path)
-        if doc is not None and doc.made_changes:
-            with open(output_filename, 'w') as f:
-                f.write(str(doc))
-    except:
-        traceback.print_exc()
+
+    output_filename = os.path.join(docset_documents_path, html_relative_path)
+    if not os.path.isdir(os.path.dirname(output_filename)):
+        os.makedirs(os.path.dirname(output_filename))
+
+    doc, entries = run(html_relative_path, html_path)
+    if doc is not None and doc.made_changes:
+        with open(output_filename, 'w') as f:
+            f.write(str(doc))
