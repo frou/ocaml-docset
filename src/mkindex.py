@@ -194,27 +194,25 @@ if __name__ == '__main__':
     import sys
     import traceback
 
-    input_dir = sys.argv[1]
-    output_dir = sys.argv[2]
-    files = glob.glob(input_dir + '/**/*.html', recursive=True)
+    _, manual_unpacked_path, docset_documents_path, docset_indexdb_path = sys.argv
+
+    files = glob.glob(manual_unpacked_path + '/**/*.html', recursive=True)
     # Ignore files related to the compiler's own library.
     # "Warning: This library is part of the internal OCaml compiler API, and is not the language standard library."
     files = [f for f in files if not fnmatch(f, "**/compilerlibref/*")]
 
-    db_filename = os.path.join(output_dir, 'docSet.dsidx')
-
-    if os.path.isfile(db_filename):
-        os.unlink(db_filename)
-    conn = sqlite3.connect(db_filename)
+    if os.path.isfile(docset_indexdb_path):
+        os.unlink(docset_indexdb_path)
+    conn = sqlite3.connect(docset_indexdb_path)
     c = conn.cursor()
     c.execute('''CREATE TABLE searchIndex(id INTEGER PRIMARY KEY, name TEXT, type TEXT, path TEXT)''')
     c.execute('''CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path)''')
     conn.commit()
 
     for filename in files:
-        relname = os.path.relpath(filename, start=input_dir)
+        relname = os.path.relpath(filename, start=manual_unpacked_path)
         try:
-            output_filename = os.path.join(output_dir, 'Documents', relname)
+            output_filename = os.path.join(docset_documents_path, relname)
             if not os.path.isdir(os.path.dirname(output_filename)):
                 os.makedirs(os.path.dirname(output_filename))
             doc, entries = run(relname, filename)

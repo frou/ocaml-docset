@@ -3,11 +3,11 @@
 import plistlib
 import sys
 
-_, name, readable_name, search_keyword, main_page, release_url = sys.argv
+_, name, readable_name, search_keyword, main_page, release_url, output_path = sys.argv
 
 # REF: https://kapeli.com/docsets (search for "Info.plist")
 
-d = {
+info = {
     "CFBundleIdentifier": name,
     "CFBundleName": readable_name,
     # If the search keyword is already well-known to Dash, it will also be used to assign the docset's icon.
@@ -18,4 +18,5 @@ d = {
     "DashDocSetFallbackURL": release_url,
 }
 
-plistlib.dump(d, sys.stdout.buffer)
+with open(output_path, "wb") as f:
+    plistlib.dump(info, f)
