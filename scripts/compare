@@ -2,10 +2,11 @@
 
 import sqlite3
 
+
 def getall(filename):
-    db = sqlite3.connect(f'file:{filename}?mode=ro', uri=True)
+    db = sqlite3.connect(f"file:{filename}?mode=ro", uri=True)
     c = db.cursor()
-    c.execute('SELECT name, type, path FROM searchIndex')
+    c.execute("SELECT name, type, path FROM searchIndex")
     result = c.fetchall()
     db.close()
     return result
@@ -26,8 +27,10 @@ def run(orig_fn, new_fn):
     missing = orig_names - new_names
 
     for row in sorted(missing):
-        print(f'missing: {row:15s} -> {ref[row]}')
+        print(f"missing: {row:15s} -> {ref[row]}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     import sys
+
     run(sys.argv[1], sys.argv[2])

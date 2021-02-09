@@ -1,35 +1,39 @@
 #!/usr/bin/env python3
 
+import glob
 import os
 import re
 import sqlite3
-import urllib.parse
-import glob
 import sys
 import traceback
+import urllib.parse
 from fnmatch import fnmatch
 
 from bs4 import BeautifulSoup
 
 # REF: https://kapeli.com/docsets#supportedentrytypes
-TYPE_CONSTRUCTOR = 'Constructor'
-TYPE_EXCEPTION   = 'Exception'
-TYPE_FIELD       = 'Field'
-TYPE_FUNCTION    = 'Function'
-TYPE_LIBRARY     = 'Library'
-TYPE_MODULE      = 'Module'
-TYPE_SECTION     = 'Section'
-TYPE_TYPE        = 'Type'
-TYPE_VALUE       = 'Value'
+TYPE_CONSTRUCTOR = "Constructor"
+TYPE_EXCEPTION = "Exception"
+TYPE_FIELD = "Field"
+TYPE_FUNCTION = "Function"
+TYPE_LIBRARY = "Library"
+TYPE_MODULE = "Module"
+TYPE_SECTION = "Section"
+TYPE_TYPE = "Type"
+TYPE_VALUE = "Value"
 
-RE_LIBRARY_CHAPTER = re.compile(r'.+The ([^ ]+) library(?:|: .+)')
+RE_LIBRARY_CHAPTER = re.compile(r".+The ([^ ]+) library(?:|: .+)")
+
 
 def add_index(name, typ, path):
     c = conn.cursor()
-    c.execute('''INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES (?, ?, ?)''',
-              (name, typ, path))
+    c.execute(
+        """INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES (?, ?, ?)""",
+        (name, typ, path),
+    )
     conn.commit()
     # print(f'{name:32s}  {typ:12s}  {path}')
+
 
 def contains(node, string):
     for s in node.strings:
@@ -37,40 +41,45 @@ def contains(node, string):
             return True
     return False
 
+
 def run(filename, file_path):
     with open(file_path) as fp:
-        soup = BeautifulSoup(fp, 'html.parser')
+        soup = BeautifulSoup(fp, "html.parser")
     soup.made_changes = False
-    h1 = soup.find('h1')
+    h1 = soup.find("h1")
     if h1 is None:
-        if not os.path.basename(filename).startswith('type_'):
-            print('WARN: no h1: ' + filename)
+        if not os.path.basename(filename).startswith("type_"):
+            print("WARN: no h1: " + filename)
         return soup, []
     h1_content = list(h1.stripped_strings)
-    libmatch = RE_LIBRARY_CHAPTER.fullmatch(' '.join(h1_content))
-    def anchor(id):
-        return filename + '#' + id
+    libmatch = RE_LIBRARY_CHAPTER.fullmatch(" ".join(h1_content))
 
-    if h1_content[0].startswith('Module') or h1_content[0].startswith('Functor'):
+    def anchor(id):
+        return filename + "#" + id
+
+    if h1_content[0].startswith("Module") or h1_content[0].startswith("Functor"):
         module_name = h1_content[1]
 
-        # Don't process some modules that cause effective duplicates to be inserted into
-        # the Index. Otherwise searching for e.g. "at_exit" will show 3 results which
-        # are no different from each other:
-        #
-        #   * Stdlib.at_exit
-        #   * Pervasives.at_exit
-        #   * Stdlib.Pervasives.at_exit
-        #
-        # "Pervasives" was superseded by "Stdlib" in OCaml 4.07 and deprecated in 4.08.
-        if (module_name == "Pervasives" or module_name.startswith("Pervasives.")
-        # These modules aren't themselves excluded from processing, but rather the
-        # modules nested inside them (note the trailing dots). This is because those
-        # nested modules will already be processed using their short names.
-        or module_name.startswith("Stdlib.")
-        or module_name.startswith("StdLabels.")
-        # These modules are billed as "for system use only":
-        or module_name.startswith("Camlinternal")):
+        if (
+            # Don't process some modules that cause effective duplicates to be inserted into
+            # the Index. Otherwise searching for e.g. "at_exit" will show 3 results which
+            # are no different from each other:
+            #
+            #   * Stdlib.at_exit
+            #   * Pervasives.at_exit
+            #   * Stdlib.Pervasives.at_exit
+            #
+            # "Pervasives" was superseded by "Stdlib" in OCaml 4.07 and deprecated in 4.08.
+            module_name == "Pervasives"
+            or module_name.startswith("Pervasives.")
+            # These modules aren't themselves excluded from processing, but rather the
+            # modules nested inside them (note the trailing dots). This is because those
+            # nested modules will already be processed using their short names.
+            or module_name.startswith("Stdlib.")
+            or module_name.startswith("StdLabels.")
+            # These modules are billed as "for system use only":
+            or module_name.startswith("Camlinternal")
+        ):
             return soup, []
 
         add_index(module_name, TYPE_MODULE, filename)
@@ -78,41 +87,46 @@ def run(filename, file_path):
         return soup, []
     elif libmatch is not None:
         libname = libmatch.group(1)
-        add_index(libname, TYPE_LIBRARY, anchor(h1['id']))
+        add_index(libname, TYPE_LIBRARY, anchor(h1["id"]))
         handle_library(filename, libname, soup)
         return soup, []
     else:
-        if not os.path.basename(filename).startswith('index_'):
-            print('WARN: no module: ' + filename)
+        if not os.path.basename(filename).startswith("index_"):
+            print("WARN: no module: " + filename)
         return soup, []
 
+
 def anchor_element(soup, typ, id):
-    id_quoted = urllib.parse.quote(id, safe='')
-    a = soup.new_tag('a')
-    a.attrs['name'] = f'//apple_ref/cpp/{typ}/{id_quoted}'
-    a.attrs['class'] = 'dashAnchor'
+    id_quoted = urllib.parse.quote(id, safe="")
+    a = soup.new_tag("a")
+    a.attrs["name"] = f"//apple_ref/cpp/{typ}/{id_quoted}"
+    a.attrs["class"] = "dashAnchor"
     soup.made_changes = True
     return a
 
-RE_LIB_TYPE = re.compile(r'type (?:.+ |)([a-zA-Z_][a-zA-Z0-9_]*)')
-RE_LIB_EXN = re.compile(r'exception ([a-zA-Z_][a-zA-Z0-9_]*)(?: of .+|)')
+
+RE_LIB_TYPE = re.compile(r"type (?:.+ |)([a-zA-Z_][a-zA-Z0-9_]*)")
+RE_LIB_EXN = re.compile(r"exception ([a-zA-Z_][a-zA-Z0-9_]*)(?: of .+|)")
+
 
 def handle_library(filename, library_name, soup):
     def anchor(id):
-        return filename + '#' + id
+        return filename + "#" + id
 
-    next_id = {'id': 0}
+    next_id = {"id": 0}
+
     def autoid():
-        id, next_id['id'] = next_id['id'], next_id['id'] + 1
-        return f'autoid_{id:04x}'
-    def getid(element):
-        if 'id' not in element.attrs:
-            element['id'] = autoid()
-            soup.made_changes = True
-        return element['id']
+        id, next_id["id"] = next_id["id"], next_id["id"] + 1
+        return f"autoid_{id:04x}"
 
-    for pre in soup.find_all('pre'):
-        pretext = ' '.join(pre.stripped_strings)
+    def getid(element):
+        if "id" not in element.attrs:
+            element["id"] = autoid()
+            soup.made_changes = True
+        return element["id"]
+
+    for pre in soup.find_all("pre"):
+        pretext = " ".join(pre.stripped_strings)
         m_type = RE_LIB_TYPE.fullmatch(pretext)
         if m_type is not None:
             typname = m_type.group(1)
@@ -127,75 +141,83 @@ def handle_library(filename, library_name, soup):
             pre.insert_before(anchor_element(soup, TYPE_EXCEPTION, exnname))
             continue
 
+
 def handle_module(filename, module_name, soup):
     def anchor(id):
-        return filename + '#' + id
+        return filename + "#" + id
 
     major_section = None
-    for section_header in soup.find_all(['h2', 'h3']):
-        if section_header.name == 'h2':
+    for section_header in soup.find_all(["h2", "h3"]):
+        if section_header.name == "h2":
             major_section = section_header.string
             add_index(
-                f'{module_name} — {major_section}', TYPE_SECTION,
-                anchor(section_header['id'])
+                f"{module_name} — {major_section}",
+                TYPE_SECTION,
+                anchor(section_header["id"]),
             )
-            section_header.insert_before(anchor_element(soup, TYPE_SECTION, major_section))
-        elif section_header.name == 'h3':
+            section_header.insert_before(
+                anchor_element(soup, TYPE_SECTION, major_section)
+            )
+        elif section_header.name == "h3":
             minor_section = section_header.string
 
             index_parent_section_prefix, toc_indent = "", ""
             if major_section is None:
-                print(f'WARN: minor section ({minor_section}) not preceded by major: {filename}')
+                print(
+                    f"WARN: minor section ({minor_section}) not preceded by major: {filename}"
+                )
             else:
-                index_parent_section_prefix = f' — {major_section}'
+                index_parent_section_prefix = f" — {major_section}"
                 toc_indent = "\t"
 
             add_index(
-                f'{module_name}{index_parent_section_prefix} — {minor_section}', TYPE_SECTION,
-                anchor(section_header['id'])
+                f"{module_name}{index_parent_section_prefix} — {minor_section}",
+                TYPE_SECTION,
+                anchor(section_header["id"]),
             )
-            section_header.insert_before(anchor_element(soup, TYPE_SECTION, f'{toc_indent}{minor_section}'))
+            section_header.insert_before(
+                anchor_element(soup, TYPE_SECTION, f"{toc_indent}{minor_section}")
+            )
 
-    for span in soup.find_all('span', id=True):
-        spanid = span['id']
-        if spanid.startswith('TYPEELT'):
+    for span in soup.find_all("span", id=True):
+        spanid = span["id"]
+        if spanid.startswith("TYPEELT"):
             name = spanid[7:]
             # this can either be a constructor or a record field
             # full_code = ' '.join(span.parent.stripped_strings)
-            if module_name == 'Bool' and name in ['t.false', 't.true']:
+            if module_name == "Bool" and name in ["t.false", "t.true"]:
                 # The bool variant type has unusual constructors (they start with a lowercase letter).
                 typ = TYPE_CONSTRUCTOR
-            elif name.split('.')[-1][0].islower():
+            elif name.split(".")[-1][0].islower():
                 typ = TYPE_FIELD
             else:
                 typ = TYPE_CONSTRUCTOR
-            add_index(f'{module_name}.{name}', typ, anchor(spanid))
+            add_index(f"{module_name}.{name}", typ, anchor(spanid))
             span.parent.insert_before(anchor_element(soup, typ, name))
 
-        elif spanid.startswith('TYPE'):
+        elif spanid.startswith("TYPE"):
             name = spanid[4:]
             span.parent.insert_before(anchor_element(soup, TYPE_TYPE, name))
-            add_index(f'{module_name}.{name}', TYPE_TYPE, anchor(spanid))
+            add_index(f"{module_name}.{name}", TYPE_TYPE, anchor(spanid))
             # add_index(f'{module_name}.{name}', TYPE_TYPE, anchor(f'//apple_ref/cpp/{TYPE_TYPE}/{name}'))
-        elif spanid.startswith('EXCEPTION'):
+        elif spanid.startswith("EXCEPTION"):
             name = spanid[9:]
-            add_index(f'{module_name}.{name}', TYPE_EXCEPTION, anchor(spanid))
+            add_index(f"{module_name}.{name}", TYPE_EXCEPTION, anchor(spanid))
             span.parent.insert_before(anchor_element(soup, TYPE_EXCEPTION, name))
-        elif spanid.startswith('VAL'):
+        elif spanid.startswith("VAL"):
             name = spanid[3:]
-            if contains(span.parent, '->'):
+            if contains(span.parent, "->"):
                 valtype = TYPE_FUNCTION
             else:
                 valtype = TYPE_VALUE
-            add_index(f'{module_name}.{name}', valtype, anchor(spanid))
+            add_index(f"{module_name}.{name}", valtype, anchor(spanid))
             span.parent.insert_before(anchor_element(soup, valtype, name))
             # print(list(span.parent.strings))
 
 
-
 _, manual_unpacked_path, docset_documents_path, docset_indexdb_path = sys.argv
 
-all_html_paths = glob.glob(manual_unpacked_path + '/**/*.html', recursive=True)
+all_html_paths = glob.glob(manual_unpacked_path + "/**/*.html", recursive=True)
 # Ignore files related to the compiler's own library.
 # "Warning: This library is part of the internal OCaml compiler API, and is not the language standard library."
 all_html_paths = [p for p in all_html_paths if not fnmatch(p, "**/compilerlibref/*")]
@@ -204,8 +226,10 @@ if os.path.isfile(docset_indexdb_path):
     os.unlink(docset_indexdb_path)
 conn = sqlite3.connect(docset_indexdb_path)
 c = conn.cursor()
-c.execute('''CREATE TABLE searchIndex(id INTEGER PRIMARY KEY, name TEXT, type TEXT, path TEXT)''')
-c.execute('''CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path)''')
+c.execute(
+    """CREATE TABLE searchIndex(id INTEGER PRIMARY KEY, name TEXT, type TEXT, path TEXT)"""
+)
+c.execute("""CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path)""")
 conn.commit()
 
 for html_path in all_html_paths:
@@ -217,5 +241,5 @@ for html_path in all_html_paths:
 
     doc, entries = run(html_relative_path, html_path)
     if doc is not None and doc.made_changes:
-        with open(output_filename, 'w') as f:
+        with open(output_filename, "w") as f:
             f.write(str(doc))
