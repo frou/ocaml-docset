@@ -1,0 +1,67 @@
+CONTAINERS_VERSION = 3.2
+
+DOWNLOADS_PATH = downloads
+GENERATED_PATH = generated
+SCRIPTS_PATH   = scripts
+
+SOURCE_BASENAME        = v$(CONTAINERS_VERSION).tar.gz
+SOURCE_URL             = https://github.com/c-cube/ocaml-containers/archive/$(SOURCE_BASENAME)
+SOURCE_PACKED_PATH     = $(DOWNLOADS_PATH)/$(SOURCE_BASENAME)
+SOURCE_UNPACKED_PATH   = $(DOWNLOADS_PATH)/containers$(CONTAINERS_VERSION)
+# SOURCE_INTERFACES_PATH = $(SOURCE_UNPACKED_PATH)/ocaml-containers-$(CONTAINERS_VERSION)/src/core
+SOURCE_INTERFACES_PATH = /Users/holmdunc/.opam/default/lib/containers
+SOURCE_DOCGEN_BASENAME = /Users/holmdunc/workspace/programming/projects/ocaml-docset/ccdocs
+
+DOCSET_BASENAME_NO_EXT = ocaml-containers
+DOCSET_BASENAME        = $(DOCSET_BASENAME_NO_EXT).docset
+DOCSET_PATH            = $(GENERATED_PATH)/$(DOCSET_BASENAME)
+DOCSET_CONTENTS_PATH   = $(DOCSET_PATH)/Contents
+DOCSET_RESOURCES_PATH  = $(DOCSET_CONTENTS_PATH)/Resources
+DOCSET_INDEXDB_PATH    = $(DOCSET_RESOURCES_PATH)/docSet.dsidx
+DOCSET_DOCUMENTS_PATH  = $(DOCSET_RESOURCES_PATH)/Documents
+DOCSET_READABLE_NAME   = OCaml Containers
+DOCSET_SEARCH_KEYWORD  = ocaml
+DOCSET_MAIN_PAGE       = $(MANUAL_CONTAINER_BASENAME)/index.html
+DOCSET_INFO_PATH       = $(DOCSET_CONTENTS_PATH)/Info.plist
+DOCSET_ARCHIVE_PATH    = $(GENERATED_PATH)/$(DOCSET_BASENAME_NO_EXT).tgz
+
+PYTHON_VENV_PATH     = .venv
+PYTHON_VENV_ACTIVATE = source $(PYTHON_VENV_PATH)/bin/activate
+
+# ------------------------------------------------------------
+
+docset: $(SOURCE_UNPACKED_PATH) $(PYTHON_VENV_PATH)
+	# cd $(SOURCE_INTERFACES_PATH) && dune exec ./mkshims.exe
+	mkdir ccdocs
+	cp $(GENERATED_PATH)/ocaml-unofficial.docset/Contents/Resources/Documents/htmlman/libref/style.css ccdocs
+	cd $(SOURCE_INTERFACES_PATH) && ocamldoc -html -d $(SOURCE_DOCGEN_BASENAME) *.mli
+
+
+$(SOURCE_UNPACKED_PATH): $(SOURCE_PACKED_PATH)
+	mkdir -p $@
+	tar xf $< -C $@
+
+$(SOURCE_PACKED_PATH):
+	mkdir -p $(DOWNLOADS_PATH)
+	curl -L -o $@ $(SOURCE_URL)
+
+$(PYTHON_VENV_PATH):
+	python3 -m venv $@
+	$(PYTHON_VENV_ACTIVATE) && pip install -r requirements.txt
+
+# ------------------------------------------------------------
+
+clean: clean-generated
+	@echo
+	@echo "Only generated files were removed. Run 'make clean-all' if you also want to remove downloaded files and the Python virtual environment."
+
+clean-generated:
+	rm -rf $(GENERATED_PATH)
+
+clean-all: clean-generated
+	rm -rf $(DOWNLOADS_PATH)
+	rm -rf $(PYTHON_VENV_PATH)
+
+# ------------------------------------------------------------
+
+.PHONY: docset clean clean-generated clean-all
