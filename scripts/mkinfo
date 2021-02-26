@@ -16,6 +16,9 @@ info = {
     "dashIndexFilePath": main_page,
     "DashDocSetFamily": "dashtoc",
     "DashDocSetFallbackURL": release_url,
+    # @todo Is opting in to Dash's new Full-Text-Search worth it? Might clutter results for not much gain.
+    # @body https://blog.kapeli.com/dash-6
+    # "DashDocSetDefaultFTSEnabled": True,
 }
 
 with open(output_path, "wb") as f:
