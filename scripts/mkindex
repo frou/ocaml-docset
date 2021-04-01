@@ -108,6 +108,9 @@ def anchor_element(soup, typ, id_):
 RE_LIB_TYPE = re.compile(r"type (?:.+ |)([a-zA-Z_][a-zA-Z0-9_]*)")
 RE_LIB_EXN = re.compile(r"exception ([a-zA-Z_][a-zA-Z0-9_]*)(?: of .+|)")
 
+# @todo Fix some Types in the "core" library page being incorrectly recognised or missing
+# @body https://ocaml.org/releases/4.12/htmlman/core.html
+# @body `bool` is missing but `true` is incorrectly recognised as a Type; `unit` is missing; `option` is missing
 
 def handle_library(filename, library_name, soup):
     def anchor(id_):
