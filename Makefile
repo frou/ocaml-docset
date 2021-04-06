@@ -30,6 +30,7 @@ PYTHON_VENV_ACTIVATE = source $(PYTHON_VENV_PATH)/bin/activate
 # ------------------------------------------------------------
 
 # The archive is for (optional) distribution: https://kapeli.com/docsets#dashdocsetfeed
+# @todo Use a GitHub Action to generate the docset serverside and provide an XML feed
 $(DOCSET_ARCHIVE_PATH): docset
 	tar --exclude=.DS_Store --strip-components 1 -czf $@ $(DOCSET_PATH)
 
