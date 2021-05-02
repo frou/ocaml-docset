@@ -145,6 +145,11 @@ def handle_library(filename, library_name, soup):
             continue
 
 
+# @todo Fix the module pages linked at the bottom of the Stdlib module not having a sidebar (ToC) when clicked
+# @body e.g. clicking "module Bool" at the bottom of htmlman/libref/Stdlib.html navigates to htmlman/libref/Stdlib.Bool.html which doesn't have a sidebar.
+# @body But visiting the other page for the Bool module (htmlman/libref/Bool.html) does have a sidebar.
+
+
 def handle_module(filename, module_name, soup):  # noqa: C901
     def anchor(id_):
         return filename + "#" + id_
