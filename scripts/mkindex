@@ -105,14 +105,23 @@ def anchor_element(soup, typ, id_):
     return a
 
 
-RE_LIB_TYPE = re.compile(r"type (?:.+ |)([a-zA-Z_][a-zA-Z0-9_]*)")
-RE_LIB_EXN = re.compile(r"exception ([a-zA-Z_][a-zA-Z0-9_]*)(?: of .+|)")
+# REF: https://ocaml.org/releases/4.10/htmlman/lex.html#sss:lex:identifiers
+RE_IDENTIFIER_COMMON_TAIL = r"[A-Za-z0-9_']*"
+RE_IDENTIFIER = rf"[A-Za-z_]{RE_IDENTIFIER_COMMON_TAIL}"
+RE_IDENTIFIER_CAPITALIZED = rf"[A-Z]{RE_IDENTIFIER_COMMON_TAIL}"
+RE_IDENTIFIER_LOWERCASE = rf"[a-z_]{RE_IDENTIFIER_COMMON_TAIL}"
+# REF: https://ocaml.org/releases/4.10/htmlman/types.html#sss:typexpr-variables
+RE_TYPE_VARIABLE = rf"'{RE_IDENTIFIER}"
+# REF: https://ocaml.org/releases/4.10/htmlman/names.html#sss:refer-named
+RE_TYPE_NAME = RE_IDENTIFIER_LOWERCASE
+RE_EXCEPTION_NAME = RE_IDENTIFIER_CAPITALIZED
 
-TEE_PREFIX = "t."
-
-# @todo Fix some Types in the "core" library page being incorrectly recognised or missing
-# @body https://ocaml.org/releases/4.12/htmlman/core.html
-# @body `bool` is missing but `true` is incorrectly recognised as a Type; `unit` is missing; `option` is missing
+RE_LIB_DOCUMENTATION_OF_TYPE = re.compile(
+    rf"type (?:(?:{RE_TYPE_VARIABLE}|\({RE_TYPE_VARIABLE}(?:, {RE_TYPE_VARIABLE})*\)) )?({RE_TYPE_NAME})(?: = (\S+(?: \| .+)?))?"
+)
+RE_LIB_DOCUMENTATION_OF_EXCEPTION = re.compile(
+    rf"exception ({RE_EXCEPTION_NAME})(?: of .+)?"
+)
 
 
 def handle_library(filename, library_name, soup):
@@ -133,14 +142,21 @@ def handle_library(filename, library_name, soup):
 
     for pre in soup.find_all("pre"):
         pretext = " ".join(pre.stripped_strings)
-        m_type = RE_LIB_TYPE.fullmatch(pretext)
+        m_type = RE_LIB_DOCUMENTATION_OF_TYPE.fullmatch(pretext)
         if m_type is not None:
             typname = m_type.group(1)
             add_index(typname, TYPE_TYPE, anchor(getid(pre)))
             pre.insert_before(anchor_element(soup, TYPE_TYPE, typname))
+
+            all_ctors = m_type.group(2)
+            if all_ctors:
+                for ctor in all_ctors.split("|"):
+                    ctor_name = ctor.split()[0]
+                    add_index(ctor_name, TYPE_CONSTRUCTOR, anchor(getid(pre)))
+                    pre.insert_before(anchor_element(soup, TYPE_CONSTRUCTOR, ctor_name))
             continue
 
-        m_exn = RE_LIB_EXN.fullmatch(pretext)
+        m_exn = RE_LIB_DOCUMENTATION_OF_EXCEPTION.fullmatch(pretext)
         if m_exn is not None:
             exnname = m_exn.group(1)
             add_index(exnname, TYPE_EXCEPTION, anchor(getid(pre)))
@@ -151,6 +167,8 @@ def handle_library(filename, library_name, soup):
 # @todo Fix the module pages linked at the bottom of the Stdlib module not having a sidebar (ToC) when clicked
 # @body e.g. clicking "module Bool" at the bottom of htmlman/libref/Stdlib.html navigates to htmlman/libref/Stdlib.Bool.html which doesn't have a sidebar.
 # @body But visiting the other page for the Bool module (htmlman/libref/Bool.html) does have a sidebar.
+
+TEE_PREFIX = "t."
 
 
 def handle_module(filename, module_name, soup):  # noqa: C901
