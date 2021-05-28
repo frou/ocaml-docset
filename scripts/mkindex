@@ -108,9 +108,12 @@ def anchor_element(soup, typ, id_):
 RE_LIB_TYPE = re.compile(r"type (?:.+ |)([a-zA-Z_][a-zA-Z0-9_]*)")
 RE_LIB_EXN = re.compile(r"exception ([a-zA-Z_][a-zA-Z0-9_]*)(?: of .+|)")
 
+TEE_PREFIX = "t."
+
 # @todo Fix some Types in the "core" library page being incorrectly recognised or missing
 # @body https://ocaml.org/releases/4.12/htmlman/core.html
 # @body `bool` is missing but `true` is incorrectly recognised as a Type; `unit` is missing; `option` is missing
+
 
 def handle_library(filename, library_name, soup):
     def anchor(id_):
@@ -195,7 +198,10 @@ def handle_module(filename, module_name, soup):  # noqa: C901
             name = spanid[7:]
             # this can either be a constructor or a record field
             # full_code = ' '.join(span.parent.stripped_strings)
-            if module_name == "Bool" and name in ["t.false", "t.true"]:
+            if module_name == "Bool" and name in [
+                TEE_PREFIX + "false",
+                TEE_PREFIX + "true",
+            ]:
                 # The bool variant type has unusual constructors (they start with a lowercase letter).
                 typ = TYPE_CONSTRUCTOR
             elif name.split(".")[-1][0].islower():
@@ -203,7 +209,15 @@ def handle_module(filename, module_name, soup):  # noqa: C901
             else:
                 typ = TYPE_CONSTRUCTOR
             add_index(f"{module_name}.{name}", typ, anchor(spanid))
-            span.parent.insert_before(anchor_element(soup, typ, name))
+            span.parent.insert_before(
+                anchor_element(
+                    soup,
+                    typ,
+                    # In the sidebar (ToC), display constructor names from a module's
+                    # primary type (`type t` by convention) in a cleaner way.
+                    name[len(TEE_PREFIX) :] if name.startswith(TEE_PREFIX) else name,
+                )
+            )
 
         elif spanid.startswith("TYPE"):
             name = spanid[4:]
