@@ -9,8 +9,12 @@ import sqlite3
 import sys
 import urllib.parse
 from fnmatch import fnmatch
+from pathlib import Path
 
+# REF: https://www.crummy.com/software/BeautifulSoup/bs4/doc/
 from bs4 import BeautifulSoup
+
+# @todo Use pathlib throughout instead of sometimes strings
 
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
@@ -43,6 +47,22 @@ def contains(node, string):
     return False
 
 
+STDLIB_MODULE_NAME = "Stdlib"
+STDLIB_MODULE_PREFIX = STDLIB_MODULE_NAME + "."
+
+
+def equivalent_unprefixed_stdlib_module_path(html_path):
+    original_html_path = Path(html_path)
+    if not original_html_path.name.startswith(STDLIB_MODULE_PREFIX):
+        return
+    unprefixed_html_path = (
+        original_html_path.parent
+        / original_html_path.name.removeprefix(STDLIB_MODULE_PREFIX)
+    )
+    if unprefixed_html_path.exists():
+        return unprefixed_html_path
+
+
 def run(html_path, html_internal_path):
     with open(html_path) as fp:
         soup = BeautifulSoup(fp, "html.parser")
@@ -62,22 +82,27 @@ def run(html_path, html_internal_path):
         module_name = h1_content[1]
 
         if (
-            # Don't process some modules that cause effective duplicates to be inserted into
-            # the Index. Otherwise searching for e.g. "at_exit" will show 3 results which
-            # are no different from each other:
+            # Skip processing the documentation for some modules, because inserting
+            # their information into the Index would cause effective duplicates.
             #
-            #   * Stdlib.at_exit
-            #   * Pervasives.at_exit
-            #   * Stdlib.Pervasives.at_exit
-            #
-            # "Pervasives" was superseded by "Stdlib" in OCaml 4.07 and deprecated in 4.08.
-            module_name == "Pervasives"
-            # These modules aren't themselves excluded from processing, but rather the
-            # modules nested inside them (note the trailing dots). This is because those
-            # nested modules will already be processed using their short names.
-            or module_name.startswith("Stdlib.")
+            # The module "Pervasives" was superseded by "Stdlib" in OCaml 4.07 and
+            # deprecated in 4.08. By skipping it, we avoid for example having both
+            # `Stdlib.at_exit` and `Pervasives.at_exit` in the Index for the same
+            # function.
+            module_name in ["Pervasives", STDLIB_MODULE_PREFIX + "Pervasives"]
+            # For most modules named `Stdlib.Foo`, the manual also contains
+            # documentation for it as module `Foo`. Skip the former because it's noiser.
+            or (
+                module_name.startswith(STDLIB_MODULE_PREFIX)
+                # It's not always that an equivalent `Foo` module exists, so check the
+                # filesystem.
+                and equivalent_unprefixed_stdlib_module_path(html_path)
+            )
+            # A module named named `StdLabels.Foo` is just a re-export of a `FooLabels`
+            # module which will already be processed.
             or module_name.startswith("StdLabels.")
-            # These modules are billed as "for system use only":
+            # Skip modules with names starting with this prefix because they are billed
+            # as "for system use only".
             or module_name.startswith("Camlinternal")
         ):
             return soup, []
@@ -164,10 +189,6 @@ def handle_library(html_path, html_internal_path, library_name, soup):
             continue
 
 
-# @todo Fix the module pages linked at the bottom of the Stdlib module not having a sidebar (ToC) when clicked
-# @body e.g. clicking "module Bool" at the bottom of htmlman/libref/Stdlib.html navigates to htmlman/libref/Stdlib.Bool.html which doesn't have a sidebar.
-# @body But visiting the other page for the Bool module (htmlman/libref/Bool.html) does have a sidebar.
-
 TEE_PREFIX = "t."
 
 
@@ -226,6 +247,7 @@ def handle_module(html_path, html_internal_path, module_name, soup):  # noqa: C9
                 typ = TYPE_FIELD
             else:
                 typ = TYPE_CONSTRUCTOR
+            # @todo Why does the Constructor `Unit.t.()` show as `Unit.t.` in the Index?
             add_index(f"{module_name}.{name}", typ, anchor(spanid))
             span.parent.insert_before(
                 anchor_element(
@@ -255,6 +277,19 @@ def handle_module(html_path, html_internal_path, module_name, soup):  # noqa: C9
             add_index(f"{module_name}.{name}", valtype, anchor(spanid))
             span.parent.insert_before(anchor_element(soup, valtype, name))
             # print(list(span.parent.strings))
+        # On the Stdlib module's page, nullify the links to its submodules at the
+        # bottom, which point to e.g. "Stdlib.Foo.html". Right next to them remain
+        # clickable links to distinct pages that document those modules in unprefixed
+        # form, e.g. "Foo.html". We do this beacase we do not index or create sidebars
+        # (ToCs) for the "Stdlib.Foo.html" pages because they are effectively duplicate
+        # content.
+        elif module_name == STDLIB_MODULE_NAME and spanid.startswith("MODULE"):
+            a = span.find("a")
+            if a:
+                try:
+                    del a["href"]
+                except KeyError:
+                    pass
 
 
 _, manual_unpacked_path, docset_documents_path, docset_indexdb_path = sys.argv
