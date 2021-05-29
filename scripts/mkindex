@@ -43,20 +43,20 @@ def contains(node, string):
     return False
 
 
-def run(filename, file_path):
-    with open(file_path) as fp:
+def run(html_path, html_internal_path):
+    with open(html_path) as fp:
         soup = BeautifulSoup(fp, "html.parser")
     soup.made_changes = False
     h1 = soup.find("h1")
     if h1 is None:
-        if not os.path.basename(filename).startswith("type_"):
-            logging.info("no h1 in %s", filename)
+        if not os.path.basename(html_internal_path).startswith("type_"):
+            logging.info("no h1 in %s", html_internal_path)
         return soup, []
     h1_content = list(h1.stripped_strings)
     libmatch = RE_LIBRARY_CHAPTER.fullmatch(" ".join(h1_content))
 
     def anchor(id_):
-        return filename + "#" + id_
+        return html_internal_path + "#" + id_
 
     if h1_content[0].startswith("Module") or h1_content[0].startswith("Functor"):
         module_name = h1_content[1]
@@ -82,17 +82,17 @@ def run(filename, file_path):
         ):
             return soup, []
 
-        add_index(module_name, TYPE_MODULE, filename)
-        handle_module(filename, module_name, soup)
+        add_index(module_name, TYPE_MODULE, html_internal_path)
+        handle_module(html_path, html_internal_path, module_name, soup)
         return soup, []
     elif libmatch is not None:
         libname = libmatch.group(1)
         add_index(libname, TYPE_LIBRARY, anchor(h1["id"]))
-        handle_library(filename, libname, soup)
+        handle_library(html_path, html_internal_path, libname, soup)
         return soup, []
     else:
-        if not os.path.basename(filename).startswith("index_"):
-            logging.info("no recognisable library or module in %s", filename)
+        if not os.path.basename(html_internal_path).startswith("index_"):
+            logging.info("no recognisable library or module in %s", html_internal_path)
         return soup, []
 
 
@@ -124,9 +124,9 @@ RE_LIB_DOCUMENTATION_OF_EXCEPTION = re.compile(
 )
 
 
-def handle_library(filename, library_name, soup):
+def handle_library(html_path, html_internal_path, library_name, soup):
     def anchor(id_):
-        return filename + "#" + id_
+        return html_internal_path + "#" + id_
 
     next_id = {"id": 0}
 
@@ -171,9 +171,9 @@ def handle_library(filename, library_name, soup):
 TEE_PREFIX = "t."
 
 
-def handle_module(filename, module_name, soup):  # noqa: C901
+def handle_module(html_path, html_internal_path, module_name, soup):  # noqa: C901
     def anchor(id_):
-        return filename + "#" + id_
+        return html_internal_path + "#" + id_
 
     major_section = None
     for section_header in soup.find_all(["h2", "h3"]):
@@ -195,7 +195,7 @@ def handle_module(filename, module_name, soup):  # noqa: C901
                 logging.warning(
                     "minor section (%s) not preceded by major in %s",
                     minor_section,
-                    filename,
+                    html_internal_path,
                 )
             else:
                 index_parent_section_prefix = f" — {major_section}"
@@ -259,10 +259,14 @@ def handle_module(filename, module_name, soup):  # noqa: C901
 
 _, manual_unpacked_path, docset_documents_path, docset_indexdb_path = sys.argv
 
-all_html_paths = glob.glob(manual_unpacked_path + "/**/*.html", recursive=True)
-# Ignore files related to the compiler's own library.
-# "Warning: This library is part of the internal OCaml compiler API, and is not the language standard library."
-all_html_paths = [p for p in all_html_paths if not fnmatch(p, "**/compilerlibref/*")]
+all_html_paths = [
+    p
+    for p in glob.glob(manual_unpacked_path + "/**/*.html", recursive=True)
+    # Ignore files related to the compiler's own library.
+    #   "Warning: This library is part of the internal OCaml compiler API, and is not
+    #    the language standard library."
+    if not fnmatch(p, "**/compilerlibref/*")
+]
 
 if os.path.isfile(docset_indexdb_path):
     os.unlink(docset_indexdb_path)
@@ -276,13 +280,13 @@ db_cursor.execute(
 db_cursor.execute("""CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path)""")
 
 for html_path in all_html_paths:
-    html_relative_path = os.path.relpath(html_path, start=manual_unpacked_path)
+    html_internal_path = os.path.relpath(html_path, start=manual_unpacked_path)
 
-    output_filename = os.path.join(docset_documents_path, html_relative_path)
+    output_filename = os.path.join(docset_documents_path, html_internal_path)
     if not os.path.isdir(os.path.dirname(output_filename)):
         os.makedirs(os.path.dirname(output_filename))
 
-    doc, entries = run(html_relative_path, html_path)
+    doc, entries = run(html_path, html_internal_path)
     if doc is not None and doc.made_changes:
         with open(output_filename, "w") as f:
             f.write(str(doc))
