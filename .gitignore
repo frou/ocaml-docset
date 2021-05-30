@@ -1,6 +1,6 @@
 /downloads/
-
 /generated/
-/generated-old/
+
+prev.db
 
 .venv

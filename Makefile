@@ -24,6 +24,8 @@ DOCSET_MAIN_PAGE       = $(MANUAL_CONTAINER_BASENAME)/index.html
 DOCSET_INFO_PATH       = $(DOCSET_CONTENTS_PATH)/Info.plist
 DOCSET_ARCHIVE_PATH    = $(GENERATED_PATH)/$(DOCSET_BASENAME_NO_EXT).tgz
 
+STASHED_INDEXDB_PATH = prev.db
+
 PYTHON_VENV_PATH     = .venv
 PYTHON_VENV_ACTIVATE = source $(PYTHON_VENV_PATH)/bin/activate
 
@@ -59,8 +61,11 @@ $(PYTHON_VENV_PATH):
 
 # ------------------------------------------------------------
 
-compare-dbs: $(DOCSET_INDEXDB_PATH)
-	$(SCRIPTS_PATH)/compare_dbs $(subst $(GENERATED_PATH)/,$(GENERATED_PATH)-old/,$<) $<
+stash-db:
+	cp $(DOCSET_INDEXDB_PATH) $(STASHED_INDEXDB_PATH)
+
+compare-dbs: $(STASHED_INDEXDB_PATH) $(DOCSET_INDEXDB_PATH)
+	$(SCRIPTS_PATH)/compare_dbs $^
 
 # ------------------------------------------------------------
 
@@ -77,4 +82,4 @@ clean-all: clean-generated
 
 # ------------------------------------------------------------
 
-.PHONY: docset compare-dbs clean clean-generated clean-all
+.PHONY: docset stash-db compare-dbs clean clean-generated clean-all
