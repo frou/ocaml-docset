@@ -1,4 +1,6 @@
 /downloads/
+
 /generated/
+/generated-old/
 
 .venv

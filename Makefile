@@ -59,6 +59,11 @@ $(PYTHON_VENV_PATH):
 
 # ------------------------------------------------------------
 
+compare-dbs: $(DOCSET_INDEXDB_PATH)
+	$(SCRIPTS_PATH)/compare_dbs $(subst $(GENERATED_PATH)/,$(GENERATED_PATH)-old/,$<) $<
+
+# ------------------------------------------------------------
+
 clean: clean-generated
 	@echo
 	@echo "Only generated files were removed. Run 'make clean-all' if you also want to remove downloaded files and the Python virtual environment."
@@ -72,4 +77,4 @@ clean-all: clean-generated
 
 # ------------------------------------------------------------
 
-.PHONY: docset clean clean-generated clean-all
+.PHONY: docset compare-dbs clean clean-generated clean-all

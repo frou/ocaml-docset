@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -ue
+
+OLD_DB_PATH="$1"
+NEW_DB_PATH="$2"
+
+OLD_DB_DUMP_PATH="$(mktemp)"
+NEW_DB_DUMP_PATH="$(mktemp)"
+
+sqlite3 "${OLD_DB_PATH}" .dump >"${OLD_DB_DUMP_PATH}"
+sqlite3 "${NEW_DB_PATH}" .dump >"${NEW_DB_DUMP_PATH}"
+
+DIFF_CMD="diff"
+
+PREFERRED_DIFF_CMDS=("ksdiff")
+for CMD in "${PREFERRED_DIFF_CMDS[@]}"; do
+	if command -v "${CMD}" >/dev/null; then
+		DIFF_CMD="${CMD}"
+		break
+	fi
+done
+
+${DIFF_CMD} "${OLD_DB_DUMP_PATH}" "${NEW_DB_DUMP_PATH}"
