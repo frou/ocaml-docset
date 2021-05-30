@@ -247,8 +247,16 @@ def handle_module(html_path, html_internal_path, module_name, soup):  # noqa: C9
                 typ = TYPE_FIELD
             else:
                 typ = TYPE_CONSTRUCTOR
-            # @todo Why does the Constructor `Unit.t.()` show as `Unit.t.` in the Index?
-            add_index(f"{module_name}.{name}", typ, anchor(spanid))
+            if module_name == "Unit" and name == "t.()":
+                # `Unit.t.()` shows as `Unit.t.` in the Dash search bar (index). Is Dash
+                # trying to be smart and trimming off the trailing `()` because it looks
+                # like a function call? Work around that by adding a unicode Zero Width
+                # Space between the parentheses.
+                add_index(
+                    f"{module_name}.{name[:3]}\u200B{name[3]}", typ, anchor(spanid)
+                )
+            else:
+                add_index(f"{module_name}.{name}", typ, anchor(spanid))
             span.parent.insert_before(
                 anchor_element(
                     soup,
