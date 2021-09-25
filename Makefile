@@ -1,4 +1,4 @@
-OCAML_VERSION     = 4.12
+OCAML_VERSION     = 4.13
 OCAML_RELEASE_URL = https://ocaml.org/releases/$(OCAML_VERSION)
 
 DOWNLOADS_PATH = downloads
