@@ -86,9 +86,9 @@ def run(html_path, html_internal_path):
             # their information into the Index would cause effective duplicates.
             #
             # The module "Pervasives" was superseded by "Stdlib" in OCaml 4.07 and
-            # deprecated in 4.08. By skipping it, we avoid for example having both
-            # `Stdlib.at_exit` and `Pervasives.at_exit` in the Index for the same
-            # function.
+            # deprecated in 4.08 (and removed in 5.00? https://github.com/ocaml/ocaml/pull/10896).
+            # By skipping it, we avoid for example having both `Stdlib.at_exit` and
+            # `Pervasives.at_exit` in the Index for the same function.
             module_name in ["Pervasives", STDLIB_MODULE_PREFIX + "Pervasives"]
             # For most modules named `Stdlib.Foo`, the manual also contains
             # documentation for it as module `Foo`. Skip the former because it's noiser.
