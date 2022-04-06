@@ -1,8 +1,8 @@
 # OCaml docset for Dash
 
-This is an improved OCaml docset for [Dash](https://kapeli.com/dash).
+This is an improved OCaml language / standard-library docset for [Dash](https://kapeli.com/dash).
 
-Compared to Dash's official docset for OCaml, this one is more up-to-date and has accuracy and usability improvements.
+Compared to Dash's official docset for OCaml, this one is [more up-to-date](https://github.com/frou/ocaml-docset/blob/master/Makefile#L1) and has better accuracy and usability too.
 
 ## Generating
 

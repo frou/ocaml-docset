@@ -75,6 +75,10 @@ def run(html_path, html_internal_path):
     h1_content = list(h1.stripped_strings)
     libmatch = RE_LIBRARY_CHAPTER.fullmatch(" ".join(h1_content))
 
+    # @todo Rename anchor function to a more accurate name like url_for_id(...)
+    # @body ...and instead of having these similar nested function definitions,
+    # @body have one top-level function definition that can be partially applied
+    # @body to html_internal_path
     def anchor(id_):
         return html_internal_path + "#" + id_
 
@@ -304,6 +308,8 @@ def handle_module(html_path, html_internal_path, module_name, h1, soup):  # noqa
                 except KeyError:
                     pass
 
+
+# ------------------------------------------------------------
 
 _, manual_unpacked_path, docset_documents_path, docset_indexdb_path = sys.argv
 
