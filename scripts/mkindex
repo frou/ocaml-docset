@@ -108,7 +108,7 @@ def run(html_path, html_internal_path):
             return soup, []
 
         add_index(module_name, TYPE_MODULE, html_internal_path)
-        handle_module(html_path, html_internal_path, module_name, soup)
+        handle_module(html_path, html_internal_path, module_name, h1, soup)
         return soup, []
     elif libmatch is not None:
         libname = libmatch.group(1)
@@ -121,6 +121,7 @@ def run(html_path, html_internal_path):
         return soup, []
 
 
+# @todo Every time this function is used, its result is passed to soup's insert_before(...), so just integrate that into this function, and rename this function to mention ToC.
 def anchor_element(soup, typ, id_):
     id_quoted = urllib.parse.quote(id_, safe="")
     a = soup.new_tag("a")
@@ -192,9 +193,13 @@ def handle_library(html_path, html_internal_path, library_name, soup):
 TEE_PREFIX = "t."
 
 
-def handle_module(html_path, html_internal_path, module_name, soup):  # noqa: C901
+def handle_module(html_path, html_internal_path, module_name, h1, soup):  # noqa: C901
     def anchor(id_):
         return html_internal_path + "#" + id_
+
+    # Add a page ToC entry for the module's own name, because otherwise when the page is
+    # scrolled down some, it can be unclear precisely which module is being viewed.
+    h1.insert_before(anchor_element(soup, TYPE_MODULE, module_name))
 
     major_section = None
     for section_header in soup.find_all(["h2", "h3"]):
