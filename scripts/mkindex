@@ -301,8 +301,7 @@ def handle_module(html_path, html_internal_path, module_name, h1, soup):  # noqa
         # (ToCs) for the "Stdlib.Foo.html" pages because they are effectively duplicate
         # content.
         elif module_name == STDLIB_MODULE_NAME and spanid.startswith("MODULE"):
-            a = span.find("a")
-            if a:
+            if a := span.find("a"):
                 try:
                     del a["href"]
                 except KeyError:
