@@ -3,7 +3,7 @@
 import plistlib
 import sys
 
-_, name, readable_name, search_keyword, main_page, release_url, output_path = sys.argv
+_, name, readable_name, search_keyword, main_page, output_path = sys.argv
 
 # REF: https://kapeli.com/docsets (search for "Info.plist")
 
@@ -15,7 +15,6 @@ info = {
     "isDashDocset": True,
     "dashIndexFilePath": main_page,
     "DashDocSetFamily": "dashtoc",
-    "DashDocSetFallbackURL": release_url,
     # @todo Is opting in to Dash's new Full-Text-Search worth it? Might clutter results for not much gain.
     # @body https://blog.kapeli.com/dash-6
     # "DashDocSetDefaultFTSEnabled": True,
