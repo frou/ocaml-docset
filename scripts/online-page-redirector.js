@@ -24,11 +24,11 @@ serve(req => {
   let match = reqPathLibraryPagePattern.exec(req.url)
   if (match) {
     return Response.redirect(
-      `${respUrlPrefix}/${match.groups.version}/api/${match.groups.page}`
+      `${respUrlPrefix}/${match.pathname.groups.version}/api/${match.pathname.groups.page}`
     )
   } else if ((match = reqPathOtherPagePattern.exec(req.url))) {
     return Response.redirect(
-      `${respUrlPrefix}/${match.groups.version}/${match.groups.page}`
+      `${respUrlPrefix}/${match.pathname.groups.version}/manual/${match.pathname.groups.page}`
     )
   } else {
     return Response.error()
