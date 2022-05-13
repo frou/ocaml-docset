@@ -1,13 +1,13 @@
 // This is a "Serverless" / Cloud function that contains some supporting logic
 // needed to make the "Open Online Page" and "Copy Online Page URL" Dash
-// features work properly for this docset.
-//
-// REF: https://deno.com/deploy/docs
+// features work properly for this docset. Deno's platform notices when a new
+// commit is made to the GitHub repo and automatically redeploys this file.
+// REF: https://deno.com/deploy/docs/deployments
 
-// The reason we need to do this is because the 2022 redesign ("V3") of the
+// The reason we need to do any of this is that the 2022 redesign ("V3") of the
 // ocaml.org website changed things such that the URLs of pages in the online
 // version of the manual no longer use the same directory structure as
-// the .tar.gz version of the manual, which this docset is built from.
+// the .tar.gz version of the manual (which our docset is built from).
 
 import { serve } from "https://deno.land/std@0.139.0/http/server.ts"
 import {
