@@ -10,7 +10,7 @@
 // the .tar.gz version of the manual, which this docset is built from.
 
 import { serve } from "https://deno.land/std@0.139.0/http/server.ts"
-import { status } from "https://deno.land/std@0.139.0/http/http_status.ts"
+import { Status } from "https://deno.land/std@0.139.0/http/http_status.ts"
 import * as strTags from "https://cdn.skypack.dev/common-tags@1.8.2?dts"
 
 const reqPathLibraryPagePattern = new URLPattern({
@@ -40,7 +40,7 @@ serve(req => {
       saying which page of the docset you were trying to view.`,
       {
         headers: { "content-type": "text/plain" },
-        status: status.NotFound,
+        status: Status.NotFound,
       }
     )
   }
