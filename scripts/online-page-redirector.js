@@ -10,7 +10,10 @@
 // the .tar.gz version of the manual, which this docset is built from.
 
 import { serve } from "https://deno.land/std@0.139.0/http/server.ts"
-import { Status } from "https://deno.land/std@0.139.0/http/http_status.ts"
+import {
+  Status,
+  STATUS_TEXT,
+} from "https://deno.land/std@0.139.0/http/http_status.ts"
 import * as strTags from "https://cdn.skypack.dev/common-tags@1.8.2?dts"
 
 const reqPathLibraryPagePattern = new URLPattern({
@@ -33,6 +36,7 @@ serve(req => {
       `${respUrlPrefix}/${match.pathname.groups.version}/manual/${match.pathname.groups.page}`
     )
   } else {
+    const statusCode = Status.NotFound
     return new Response(
       strTags.oneLine`If you arrived here via the 'Open Online Page' or
 'Copy Online Page URL' feature in Dash, then this should have worked.
@@ -40,7 +44,8 @@ Please open a new issue at https://github.com/frou/ocaml-docset/issues
 saying which page of the docset you were trying to view.`,
       {
         headers: { "content-type": "text/plain" },
-        status: Status.NotFound,
+        status: statusCode,
+        statusText: STATUS_TEXT.get(statusCode),
       }
     )
   }
