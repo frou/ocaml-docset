@@ -29,9 +29,5 @@ info = {
     # "DashDocSetDefaultFTSEnabled": True,
 }
 
-# @todo If the "Open Online Page" feature stops working again (see commit 4df4259), we will need to resort to the more laborious approach of embedding special comments in every HTML file.
-# @body https://kapeli.com/docsets#onlineRedirection
-# @body That would need to happen for every single HTML file in the manual, not just the Module and Library pages that we have "handle_" functions for.
-
 with open(output_path, "wb") as f:
     plistlib.dump(info, f)
