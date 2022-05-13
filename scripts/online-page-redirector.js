@@ -34,10 +34,10 @@ serve(req => {
     )
   } else {
     return new Response(
-      strTags.oneLineTrim`If you arrived here via the 'Open Online Page' or
-      'Copy Online Page URL' feature in Dash, then this should have worked.
-      Please open a new issue at https://github.com/frou/ocaml-docset/issues
-      saying which page of the docset you were trying to view.`,
+      strTags.oneLine`If you arrived here via the 'Open Online Page' or
+'Copy Online Page URL' feature in Dash, then this should have worked.
+Please open a new issue at https://github.com/frou/ocaml-docset/issues
+saying which page of the docset you were trying to view.`,
       {
         headers: { "content-type": "text/plain" },
         status: Status.NotFound,
