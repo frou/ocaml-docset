@@ -16,9 +16,10 @@ and the `DashDocSetFallbackURL` value in its Info.plist file is set to something
 
     https://ocaml-docset-redirector.deno.dev/4.14/
 
-When a user of the Docset is viewing a page inside the Docset using Dash (such as
-`htmlman/libref/Arg.html`), and they use the "Open Online Page" feature (by clicking the
-Share icon at the top right), this URL will be opened in their default web browser:
+When a Dash user is viewing a page inside the Docset (such as the documentation for the
+Arg module in the standard library), and selects "Open Online Page" (by first clicking
+the Share icon at the top right), a URL like the folowing will be opened in their
+default web browser:
 
     https://ocaml-docset-redirector.deno.dev/4.14/htmlman/libref/Arg.html
 
@@ -33,7 +34,6 @@ import { Status } from "https://deno.land/std@0.139.0/http/http_status.ts"
 import * as strTags from "https://cdn.skypack.dev/common-tags@1.8.2?dts"
 
 const ocamlReleasesUrl = "https://ocaml.org/releases"
-
 const selfExplainerUrl =
   "https://github.com/frou/ocaml-docset/blob/master/scripts/online-page-redirector.js"
 
