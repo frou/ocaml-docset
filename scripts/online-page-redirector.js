@@ -31,7 +31,7 @@ the following URL, and redirect to it:
 
 import { serve } from "https://deno.land/std@0.139.0/http/server.ts"
 import { Status } from "https://deno.land/std@0.139.0/http/http_status.ts"
-import * as strTags from "https://cdn.skypack.dev/common-tags@1.8.2?dts"
+import * as strTags from "https://esm.sh/common-tags@1.8.2"
 
 const ocamlReleasesUrl = "https://ocaml.org/releases"
 const selfExplainerUrl =
