@@ -16,6 +16,8 @@ from bs4 import BeautifulSoup
 
 # @todo Use pathlib throughout instead of sometimes strings
 
+# @todo String concat operator ^ is not indexed?
+
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
 # REF: https://kapeli.com/docsets#supportedentrytypes
