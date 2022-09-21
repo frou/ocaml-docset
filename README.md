@@ -4,6 +4,8 @@ This is an improved OCaml language / standard-library docset for [Dash](https://
 
 Compared to Dash's official docset for OCaml, this one is [more up-to-date](https://github.com/frou/ocaml-docset/blob/master/Makefile#L1) and has better accuracy and usability too.
 
+<!-- @todo Add screenshots to the README -->
+
 ## Generating the Docset
 
 You must have `python3` and `make` installed.
