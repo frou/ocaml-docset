@@ -9,8 +9,8 @@ NEW_DB_CONTENT_PATH="$(mktemp)"
 
 QUERY='select name, type, path from searchIndex;'
 
-sqlite3 "${OLD_DB_PATH}" "${QUERY}" >"${OLD_DB_CONTENT_PATH}"
-sqlite3 "${NEW_DB_PATH}" "${QUERY}" >"${NEW_DB_CONTENT_PATH}"
+sqlite3 -init /dev/null "${OLD_DB_PATH}" "${QUERY}" >"${OLD_DB_CONTENT_PATH}"
+sqlite3 -init /dev/null "${NEW_DB_PATH}" "${QUERY}" >"${NEW_DB_CONTENT_PATH}"
 
 DIFF_CMD="diff"
 
