@@ -30,6 +30,7 @@ TYPE_MODULE = "Module"
 TYPE_SECTION = "Section"
 TYPE_TYPE = "Type"
 TYPE_VALUE = "Value"
+# @todo Index the ~35 named Chapters as TYPE_GUIDE
 
 RE_LIBRARY_CHAPTER = re.compile(r".+The ([^ ]+) library(?:|: .+)")
 
