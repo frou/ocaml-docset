@@ -9,8 +9,11 @@ NEW_DB_CONTENT_PATH="$(mktemp)"
 
 QUERY='select name, type, path from searchIndex;'
 
-sqlite3 -init /dev/null "${OLD_DB_PATH}" "${QUERY}" >"${OLD_DB_CONTENT_PATH}"
-sqlite3 -init /dev/null "${NEW_DB_PATH}" "${QUERY}" >"${NEW_DB_CONTENT_PATH}"
+# Stop the possibility of a user's ~/.sqliterc file setting an unexpected output mode.
+SQLITE="sqlite3 -init /dev/null"
+
+${SQLITE} "${OLD_DB_PATH}" "${QUERY}" >"${OLD_DB_CONTENT_PATH}"
+${SQLITE} "${NEW_DB_PATH}" "${QUERY}" >"${NEW_DB_CONTENT_PATH}"
 
 DIFF_CMD="diff"
 
