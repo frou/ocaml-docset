@@ -29,16 +29,14 @@ the following URL, and redirect to it:
     https://ocaml.org/releases/4.14/api/Arg.html
 */
 
-import { serve } from "https://deno.land/std@0.139.0/http/server.ts"
-import { Status } from "https://deno.land/std@0.139.0/http/http_status.ts"
-// @todo Import the following from "npm:common-tags@^1.8.2" once Deno Deploy supports that feature.
-import * as strTags from "https://esm.sh/common-tags@1.8.2"
+import { ConnInfo, serve } from "https://deno.land/std@0.140.0/http/server.ts"
+import { Status } from "https://deno.land/std@0.140.0/http/http_status.ts"
 
 const ocamlReleasesUrl = "https://ocaml.org/releases"
 const selfExplainerUrl =
-  "https://github.com/frou/ocaml-docset/blob/master/scripts/online-page-redirector.js"
+  "https://github.com/frou/ocaml-docset/blob/master/scripts/online-page-redirector.ts"
 
-const requestRoutes = [
+const requestRoutes: [URLPattern, (match: URLPatternResult) => Response][] = [
   [
     new URLPattern({ pathname: "/:version/htmlman/libref/:page" }),
     match =>
@@ -55,19 +53,20 @@ const requestRoutes = [
   ],
 ]
 
-serve(function (req, connInfo) {
-  for (const [pattern, handler] of requestRoutes) {
+serve(function (req: Request, connInfo: ConnInfo) {
+  for (const [pattern, responder] of requestRoutes) {
     const match = pattern.exec(req.url)
     if (match) {
-      return handler(match)
+      return responder(match)
     }
   }
 
-  console.warn({ unhandledUrlRequested: req.url, by: connInfo.remoteAddr.hostname })
+  console.warn({
+    unhandledUrlRequested: req.url,
+    by: (connInfo.remoteAddr as Deno.NetAddr).hostname,
+  })
   return new Response(
-    strTags.oneLine`Unrecognised path. <a href="${selfExplainerUrl}">See here</a> for an
-    explanation of the purpose of this service, and open an issue if it is not working
-    properly for you.`,
+    `Unrecognised path. <a href="${selfExplainerUrl}">See here</a> for an explanation of the purpose of this service, and open an issue if it is not working properly for you.`,
     { status: Status.NotFound, headers: { "Content-Type": "text/html" } }
   )
 })

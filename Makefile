@@ -24,7 +24,7 @@ DOCSET_MAIN_PAGE       = $(MANUAL_CONTAINER_BASENAME)/index.html
 DOCSET_INFO_PATH       = $(DOCSET_CONTENTS_PATH)/Info.plist
 DOCSET_ARCHIVE_PATH    = $(GENERATED_PATH)/$(DOCSET_BASENAME_NO_EXT).tgz
 
-# See: scripts/online-page-redirector.js
+# See: scripts/online-page-redirector.ts
 ONLINE_PAGE_BASE_URL = https://ocaml-docset-redirector.deno.dev/$(OCAML_VERSION)/
 
 STASHED_INDEXDB_PATH = prev.db
