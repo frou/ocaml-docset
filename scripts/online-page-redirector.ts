@@ -79,13 +79,10 @@ serve(function (req: Request, connInfo: ConnInfo) {
     unhandledUrlRequested: req.url,
     by: (connInfo.remoteAddr as Deno.NetAddr).hostname,
   })
-  // @todo Use import.meta.url to derive a value from the `<a href` attribute?
-  // @body https://deno.land/manual/runtime/import_meta_api
-  // @body https://stackoverflow.com/questions/61829367/node-js-dirname-filename-equivalent-in-deno
-  console.log(import.meta.url)
-  console.log(path.basename(path.fromFileUrl(import.meta.url)))
+  // NOTE: It seems to be an implementation detail of Deno Deploy that the contents of the GitHub repo linked to the Project get cloned into /src
+  const scriptRepoRelPath = path.relative("/src", path.fromFileUrl(import.meta.url))
   return new Response(
-    `Unrecognised path. <a href="https://github.com/frou/ocaml-docset/blob/master/scripts/online-page-redirector.ts">See here</a> for an explanation of the purpose of this service, and open an issue if it is not working properly for you.`,
+    `Unrecognised path. <a href="https://github.com/frou/ocaml-docset/blob/master/${scriptRepoRelPath}">See here</a> for an explanation of the purpose of this service, and open an issue if it is not working properly for you.`,
     { status: Status.NotFound, headers: { "Content-Type": "text/html" } }
   )
 })
