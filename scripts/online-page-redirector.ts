@@ -29,35 +29,49 @@ the following URL, and redirect to it:
     https://ocaml.org/releases/4.14/api/Arg.html
 */
 
-import { ConnInfo, serve } from "https://deno.land/std@0.140.0/http/server.ts"
-import { Status } from "https://deno.land/std@0.140.0/http/http_status.ts"
+import { Status } from "https://deno.land/std@0.178.0/http/http_status.ts"
+import { ConnInfo, serve } from "https://deno.land/std@0.178.0/http/server.ts"
+import * as path from "https://deno.land/std@0.178.0/path/mod.ts"
 
-const ocamlReleasesUrl = "https://ocaml.org/releases"
-const selfExplainerUrl =
-  "https://github.com/frou/ocaml-docset/blob/master/scripts/online-page-redirector.ts"
+function makeDocUrl(ocamlVersion: string, ...docPathComponents: Array<string>): URL {
+  return new URL(
+    ["releases", ocamlVersion, ...docPathComponents].join("/"),
+    "https://ocaml.org"
+  )
+}
 
-const requestRoutes: [URLPattern, (match: URLPatternResult) => Response][] = [
+type Route = [URLPattern, (match: URLPatternResult) => Response]
+
+const routes: Array<Route> = [
   [
     new URLPattern({ pathname: "/:version/htmlman/libref/:page" }),
     match =>
       Response.redirect(
-        `${ocamlReleasesUrl}/${match.pathname.groups.version}/api/${match.pathname.groups.page}`
+        makeDocUrl(
+          match.pathname.groups.version,
+          "api",
+          match.pathname.groups.page
+        )
       ),
   ],
   [
     new URLPattern({ pathname: "/:version/htmlman/:page" }),
     match =>
       Response.redirect(
-        `${ocamlReleasesUrl}/${match.pathname.groups.version}/manual/${match.pathname.groups.page}`
+        makeDocUrl(
+          match.pathname.groups.version,
+          "manual",
+          match.pathname.groups.page
+        )
       ),
   ],
 ]
 
 serve(function (req: Request, connInfo: ConnInfo) {
-  for (const [pattern, responder] of requestRoutes) {
+  for (const [pattern, respond] of routes) {
     const match = pattern.exec(req.url)
     if (match) {
-      return responder(match)
+      return respond(match)
     }
   }
 
@@ -65,8 +79,13 @@ serve(function (req: Request, connInfo: ConnInfo) {
     unhandledUrlRequested: req.url,
     by: (connInfo.remoteAddr as Deno.NetAddr).hostname,
   })
+  // @todo Use import.meta.url to derive a value from the `<a href` attribute?
+  // @body https://deno.land/manual/runtime/import_meta_api
+  // @body https://stackoverflow.com/questions/61829367/node-js-dirname-filename-equivalent-in-deno
+  console.log(import.meta.url)
+  console.log(path.basename(path.fromFileUrl(import.meta.url)))
   return new Response(
-    `Unrecognised path. <a href="${selfExplainerUrl}">See here</a> for an explanation of the purpose of this service, and open an issue if it is not working properly for you.`,
+    `Unrecognised path. <a href="https://github.com/frou/ocaml-docset/blob/master/scripts/online-page-redirector.ts">See here</a> for an explanation of the purpose of this service, and open an issue if it is not working properly for you.`,
     { status: Status.NotFound, headers: { "Content-Type": "text/html" } }
   )
 })
