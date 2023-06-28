@@ -56,7 +56,7 @@ $(MANUAL_UNPACKED_PATH): $(MANUAL_PACKED_PATH)
 
 $(MANUAL_PACKED_PATH):
 	mkdir -p $(DOWNLOADS_PATH)
-	curl -L -o $@ $(MANUAL_URL)
+	curl --fail -L -o $@ $(MANUAL_URL)
 
 $(PYTHON_VENV_PATH):
 	python3 -m venv $@
