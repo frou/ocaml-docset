@@ -21,6 +21,9 @@ from bs4 import BeautifulSoup
 # @body Only `(^` or `^)` or `(^)` finds it.
 # @body The format-string concat operator ^^ does not have this problem.
 
+# @todo Check how the installation instructions in the README go when the stock OCaml docset is installed and enabled.
+
+
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
 # REF: https://kapeli.com/docsets#supportedentrytypes

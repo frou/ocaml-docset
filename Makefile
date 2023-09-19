@@ -24,7 +24,7 @@ DOCSET_MAIN_PAGE       = $(MANUAL_CONTAINER_BASENAME)/index.html
 DOCSET_INFO_PATH       = $(DOCSET_CONTENTS_PATH)/Info.plist
 DOCSET_ARCHIVE_PATH    = $(GENERATED_PATH)/$(DOCSET_BASENAME_NO_EXT).tgz
 
-# See: scripts/online-page-redirector.ts
+# See ./scripts/online-page-redirector.ts
 ONLINE_PAGE_BASE_URL = https://ocaml-docset-redirector.deno.dev/$(OCAML_VERSION)/
 
 STASHED_INDEXDB_PATH = prev.db
@@ -43,6 +43,9 @@ docset: $(MANUAL_UNPACKED_PATH) $(PYTHON_VENV_PATH)
 	# Copy the HTML manual into the docset
 	mkdir -p $(DOCSET_DOCUMENTS_PATH)
 	cp -a $(MANUAL_UNPACKED_PATH)/$(MANUAL_CONTAINER_BASENAME) $(DOCSET_DOCUMENTS_PATH)
+
+	# @todo Rename the scripts to index-manual and describe-docset
+	# @body Also might as well rename the compare_dbs script to compare-indices
 
 	# Index the HTML manual, and insert anchor tags to enable page ToCs
 	$(PYTHON_VENV_ACTIVATE) && $(SCRIPTS_PATH)/mkindex $(MANUAL_UNPACKED_PATH) $(DOCSET_DOCUMENTS_PATH) $(DOCSET_INDEXDB_PATH)
