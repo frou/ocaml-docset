@@ -1,8 +1,10 @@
 /*
-This is a "Serverless"/Cloud function that contains some supporting logic needed to make
-the "Open Online Page" and "Copy Online Page URL" Dash features work properly for this
-Docset. The Deno Deploy platform notices when a new commit is made to the GitHub repo
-and automatically redeploys this file. REF: https://deno.com/deploy/docs/deployments
+This file defines a ""Serverless Function"" that comprises some supporting logic needed
+to make the "Open Online Page" and "Copy Online Page URL" Dash features work properly
+for the Docset.
+
+The Deno Deploy platform notices when a new commit is made to the GitHub repo containing
+this file and automatically redeploys it. REF: https://deno.com/deploy/docs/deployments
 
 The reason we need to do any of this is that the 2022 redesign ("V3") of the ocaml.org
 website changed things such that the URLs of pages in the online version of the manual
@@ -33,9 +35,9 @@ import { Status } from "https://deno.land/std@0.178.0/http/http_status.ts"
 import { ConnInfo, serve } from "https://deno.land/std@0.178.0/http/server.ts"
 import * as path from "https://deno.land/std@0.178.0/path/mod.ts"
 
-function makeDocUrl(ocamlVersion: string, ...docPathComponents: Array<string>): URL {
+function makeDocUrl(ocamlVersion: string, ...docPathSegments: Array<string>): URL {
   return new URL(
-    ["releases", ocamlVersion, ...docPathComponents].join("/"),
+    ["releases", ocamlVersion, ...docPathSegments].join("/"),
     "https://ocaml.org"
   )
 }
@@ -67,6 +69,10 @@ const routes: Array<Route> = [
   ],
 ]
 
+// NOTE: It seems to be an implementation detail of Deno Deploy that the contents of the
+// GitHub repo linked to the Project appear to be placed under /src
+const thisFileRepoRelPath = path.relative("/src", path.fromFileUrl(import.meta.url))
+
 serve(function (req: Request, connInfo: ConnInfo) {
   for (const [pattern, respond] of routes) {
     const match = pattern.exec(req.url)
@@ -79,10 +85,8 @@ serve(function (req: Request, connInfo: ConnInfo) {
     unhandledUrlRequested: req.url,
     by: (connInfo.remoteAddr as Deno.NetAddr).hostname,
   })
-  // NOTE: It seems to be an implementation detail of Deno Deploy that the contents of the GitHub repo linked to the Project get cloned into /src
-  const scriptRepoRelPath = path.relative("/src", path.fromFileUrl(import.meta.url))
   return new Response(
-    `Unrecognised path. <a href="https://github.com/frou/ocaml-docset/blob/master/${scriptRepoRelPath}">See here</a> for an explanation of the purpose of this service, and open an issue if it is not working properly for you.`,
+    `Unrecognised path. <a href="https://github.com/frou/ocaml-docset/blob/master/${thisFileRepoRelPath}">See here</a> for an explanation of the purpose of this service, and open an issue if it is not working properly for you.`,
     { status: Status.NotFound, headers: { "Content-Type": "text/html" } }
   )
 })
