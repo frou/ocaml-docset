@@ -6,7 +6,7 @@ for the Docset.
 The Deno Deploy platform notices when a new commit is made to the GitHub repo containing
 this file and automatically redeploys it. REF: https://deno.com/deploy/docs/deployments
 
-The reason we need to do any of this is that the 2022 redesign ("V3") of the ocaml.org
+The reason we need to do any of this is that the 2022 redesign of the ocaml.org
 website changed things such that the URLs of pages in the online version of the manual
 no longer use the same directory structure as the .tar.gz version of the manual
 (which our Docset is generated from).
@@ -16,19 +16,19 @@ For example:
 When the Docset is generated (using the Makefie), it is for a specific OCaml version,
 and the `DashDocSetFallbackURL` value in its Info.plist file is set to something like:
 
-    https://ocaml-docset-redirector.deno.dev/4.14/
+    https://ocaml-docset-redirector.deno.dev/5.1/
 
 When a Dash user is viewing a page inside the Docset (such as the documentation for the
 Arg module in the standard library), and selects "Open Online Page" (by first clicking
 the Share icon at the top right), a URL like the folowing will be opened in their
 default web browser:
 
-    https://ocaml-docset-redirector.deno.dev/4.14/htmlman/libref/Arg.html
+    https://ocaml-docset-redirector.deno.dev/5.1/htmlman/libref/Arg.html
 
 The logic in this file will receive that HTTP request and will transform that URL into
 the following URL, and redirect to it:
 
-    https://ocaml.org/releases/4.14/api/Arg.html
+    https://v2.ocaml.org/releases/5.1/api/Arg.html
 */
 
 import { Status } from "https://deno.land/std@0.178.0/http/http_status.ts"
@@ -38,7 +38,7 @@ import * as path from "https://deno.land/std@0.178.0/path/mod.ts"
 function makeDocUrl(ocamlVersion: string, ...docPathSegments: Array<string>): URL {
   return new URL(
     ["releases", ocamlVersion, ...docPathSegments].join("/"),
-    "https://ocaml.org"
+    "https://v2.ocaml.org"
   )
 }
 
