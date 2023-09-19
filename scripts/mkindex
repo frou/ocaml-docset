@@ -16,11 +16,6 @@ from bs4 import BeautifulSoup
 
 # @todo Use pathlib throughout instead of sometimes strings
 
-# @todo Why does Dash's search bar not find the string concat operator ^ with search term `^` ?
-# @body It is in the Index.
-# @body Only `(^` or `^)` or `(^)` finds it.
-# @body The format-string concat operator ^^ does not have this problem.
-
 # @todo Check how the installation instructions in the README go when the stock OCaml docset is installed and enabled.
 
 
