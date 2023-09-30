@@ -29,8 +29,11 @@ ONLINE_PAGE_BASE_URL = https://ocaml-docset-redirector.deno.dev/$(OCAML_VERSION)
 
 STASHED_INDEXDB_PATH = prev.db
 
+GLOBAL_PYTHON_INVOCATION = python3
+
 PYTHON_VENV_PATH     = .venv
 PYTHON_VENV_ACTIVATE = source $(PYTHON_VENV_PATH)/bin/activate
+PYTHON_INVOCATION    = python
 
 # ------------------------------------------------------------
 
@@ -44,14 +47,14 @@ docset: $(MANUAL_UNPACKED_PATH) $(PYTHON_VENV_PATH)
 	mkdir -p $(DOCSET_DOCUMENTS_PATH)
 	cp -a $(MANUAL_UNPACKED_PATH)/$(MANUAL_CONTAINER_BASENAME) $(DOCSET_DOCUMENTS_PATH)
 
-	# @todo Rename the scripts to index-manual and describe-docset
-	# @body Also might as well rename the compare_dbs script to compare-indices
-
 	# Index the HTML manual, and insert anchor tags to enable page ToCs
-	$(PYTHON_VENV_ACTIVATE) && $(SCRIPTS_PATH)/mkindex $(MANUAL_UNPACKED_PATH) $(DOCSET_DOCUMENTS_PATH) $(DOCSET_INDEXDB_PATH)
+	$(PYTHON_VENV_ACTIVATE) && $(PYTHON_INVOCATION) $(SCRIPTS_PATH)/index_manual.py $(MANUAL_UNPACKED_PATH) $(DOCSET_DOCUMENTS_PATH) $(DOCSET_INDEXDB_PATH)
 
 	# Create the Property List file that describes the docset
-	$(PYTHON_VENV_ACTIVATE) && $(SCRIPTS_PATH)/mkinfo $(DOCSET_BASENAME_NO_EXT) "$(DOCSET_READABLE_NAME)" $(DOCSET_SEARCH_KEYWORD) $(DOCSET_MAIN_PAGE) $(ONLINE_PAGE_BASE_URL) $(DOCSET_INFO_PATH)
+	$(PYTHON_VENV_ACTIVATE) && $(PYTHON_INVOCATION) $(SCRIPTS_PATH)/describe_docset.py $(DOCSET_BASENAME_NO_EXT) "$(DOCSET_READABLE_NAME)" $(DOCSET_SEARCH_KEYWORD) $(DOCSET_MAIN_PAGE) $(ONLINE_PAGE_BASE_URL) $(DOCSET_INFO_PATH)
+
+docset-debug: PYTHON_INVOCATION += -m pdb
+docset-debug: docset
 
 $(MANUAL_UNPACKED_PATH): $(MANUAL_PACKED_PATH)
 	mkdir -p $@
@@ -62,7 +65,7 @@ $(MANUAL_PACKED_PATH):
 	curl --fail -L -o $@ $(MANUAL_URL)
 
 $(PYTHON_VENV_PATH):
-	python3 -m venv $@
+	$(GLOBAL_PYTHON_INVOCATION) -m venv $@
 	$(PYTHON_VENV_ACTIVATE) && pip install -r requirements.txt
 
 # ------------------------------------------------------------
@@ -88,4 +91,4 @@ clean-all: clean-generated
 
 # ------------------------------------------------------------
 
-.PHONY: docset stash-db compare-dbs clean clean-generated clean-all
+.PHONY: docset docset-debug stash-db compare-dbs clean clean-generated clean-all
