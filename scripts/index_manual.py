@@ -16,8 +16,6 @@ from bs4 import BeautifulSoup, Tag
 
 # @todo Use pathlib throughout instead of sometimes strings
 
-# @todo Check how the installation instructions in the README go when the stock OCaml docset is installed and enabled.
-
 
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
@@ -358,6 +356,6 @@ for html_path in all_html_paths:
         os.makedirs(os.path.dirname(output_filename))
 
     doc = run(html_path, html_internal_path)
-    if doc is not None and doc.tweaked:
+    if doc.tweaked:
         with open(output_filename, "w") as f:
             f.write(str(doc))

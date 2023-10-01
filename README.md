@@ -12,6 +12,8 @@ Compared to Dash's official docset for OCaml, this one:
 
 <!-- @todo Add screenshots to the README -->
 
+<!-- @todo Check how the installation instructions in the README go when the stock OCaml docset is installed and enabled -->
+
 ## Generating the Docset
 
 You must have `python3` and `make` installed.
