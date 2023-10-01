@@ -6,6 +6,7 @@ import re
 import sqlite3
 import sys
 import urllib.parse
+from enum import StrEnum, auto
 from fnmatch import fnmatch
 from pathlib import Path
 
@@ -19,27 +20,29 @@ from bs4 import BeautifulSoup
 
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
+
 # REF: https://kapeli.com/docsets#supportedentrytypes
-TYPE_CONSTRUCTOR = "Constructor"
-TYPE_EXCEPTION = "Exception"
-TYPE_FIELD = "Field"
-TYPE_FUNCTION = "Function"
-TYPE_LIBRARY = "Library"
-TYPE_MODULE = "Module"
-TYPE_SECTION = "Section"
-TYPE_TYPE = "Type"
-TYPE_VALUE = "Value"
-# @todo Index the ~35 named Chapters as TYPE_GUIDE
+class DashCategory(StrEnum):
+    CONSTRUCTOR = auto()
+    EXCEPTION = auto()
+    FIELD = auto()
+    FUNCTION = auto()
+    LIBRARY = auto()
+    MODULE = auto()
+    SECTION = auto()
+    TYPE = auto()
+    VALUE = auto()
+    # @todo Index the ~35 named Chapters as GUIDE
+
 
 RE_LIBRARY_CHAPTER = re.compile(r".+The ([^ ]+) library(?:|: .+)")
 
 
-def add_index(name, typ, path):
+def add_index(name: str, category: DashCategory, path: str) -> None:
     db_cursor.execute(
         """INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES (?, ?, ?)""",
-        (name, typ, path),
+        (name, category.title(), path),
     )
-    # print(f'{name:32s}  {typ:12s}  {path}')
 
 
 def contains(node, string):
@@ -120,12 +123,12 @@ def run(html_path, html_internal_path):
         ):
             return soup, []
 
-        add_index(module_name, TYPE_MODULE, html_internal_path)
+        add_index(module_name, DashCategory.MODULE, html_internal_path)
         handle_module(html_path, html_internal_path, module_name, h1, soup)
         return soup, []
     elif libmatch is not None:
         libname = libmatch.group(1)
-        add_index(libname, TYPE_LIBRARY, anchor(h1["id"]))
+        add_index(libname, DashCategory.LIBRARY, anchor(h1["id"]))
         handle_library(html_path, html_internal_path, libname, soup)
         return soup, []
     else:
@@ -135,10 +138,10 @@ def run(html_path, html_internal_path):
 
 
 # @todo Every time this function is used, its result is passed to soup's insert_before(...), so just integrate that into this function, and rename this function to mention ToC.
-def anchor_element(soup, typ, id_):
+def anchor_element(soup, category, id_):
     id_quoted = urllib.parse.quote(id_, safe="")
     a = soup.new_tag("a")
-    a.attrs["name"] = f"//apple_ref/cpp/{typ}/{id_quoted}"
+    a.attrs["name"] = f"//apple_ref/cpp/{category.title()}/{id_quoted}"
     a.attrs["class"] = "dashAnchor"
     soup.tweaked = True
     return a
@@ -184,22 +187,24 @@ def handle_library(html_path, html_internal_path, library_name, soup):
         m_type = RE_LIB_DOCUMENTATION_OF_TYPE.fullmatch(pretext)
         if m_type is not None:
             typname = m_type.group(1)
-            add_index(typname, TYPE_TYPE, anchor(getid(pre)))
-            pre.insert_before(anchor_element(soup, TYPE_TYPE, typname))
+            add_index(typname, DashCategory.TYPE, anchor(getid(pre)))
+            pre.insert_before(anchor_element(soup, DashCategory.TYPE, typname))
 
             all_ctors = m_type.group(2)
             if all_ctors:
                 for ctor in all_ctors.split("|"):
                     ctor_name = ctor.split()[0]
-                    add_index(ctor_name, TYPE_CONSTRUCTOR, anchor(getid(pre)))
-                    pre.insert_before(anchor_element(soup, TYPE_CONSTRUCTOR, ctor_name))
+                    add_index(ctor_name, DashCategory.CONSTRUCTOR, anchor(getid(pre)))
+                    pre.insert_before(
+                        anchor_element(soup, DashCategory.CONSTRUCTOR, ctor_name)
+                    )
             continue
 
         m_exn = RE_LIB_DOCUMENTATION_OF_EXCEPTION.fullmatch(pretext)
         if m_exn is not None:
             exnname = m_exn.group(1)
-            add_index(exnname, TYPE_EXCEPTION, anchor(getid(pre)))
-            pre.insert_before(anchor_element(soup, TYPE_EXCEPTION, exnname))
+            add_index(exnname, DashCategory.EXCEPTION, anchor(getid(pre)))
+            pre.insert_before(anchor_element(soup, DashCategory.EXCEPTION, exnname))
             continue
 
 
@@ -212,7 +217,7 @@ def handle_module(html_path, html_internal_path, module_name, h1, soup):  # noqa
 
     # Add a page ToC entry for the module's own name, because otherwise when the page is
     # scrolled down some, it can be unclear precisely which module is being viewed.
-    h1.insert_before(anchor_element(soup, TYPE_MODULE, module_name))
+    h1.insert_before(anchor_element(soup, DashCategory.MODULE, module_name))
 
     major_section = None
     for section_header in soup.find_all(["h2", "h3"]):
@@ -220,11 +225,11 @@ def handle_module(html_path, html_internal_path, module_name, h1, soup):  # noqa
             major_section = section_header.string
             add_index(
                 f"{module_name} — {major_section}",
-                TYPE_SECTION,
+                DashCategory.SECTION,
                 anchor(section_header["id"]),
             )
             section_header.insert_before(
-                anchor_element(soup, TYPE_SECTION, major_section)
+                anchor_element(soup, DashCategory.SECTION, major_section)
             )
         elif section_header.name == "h3":
             minor_section = section_header.string
@@ -242,11 +247,13 @@ def handle_module(html_path, html_internal_path, module_name, h1, soup):  # noqa
 
             add_index(
                 f"{module_name}{index_parent_section_prefix} — {minor_section}",
-                TYPE_SECTION,
+                DashCategory.SECTION,
                 anchor(section_header["id"]),
             )
             section_header.insert_before(
-                anchor_element(soup, TYPE_SECTION, f"{toc_indent}{minor_section}")
+                anchor_element(
+                    soup, DashCategory.SECTION, f"{toc_indent}{minor_section}"
+                )
             )
 
     for span in soup.find_all("span", id=True):
@@ -260,25 +267,25 @@ def handle_module(html_path, html_internal_path, module_name, h1, soup):  # noqa
                 TEE_PREFIX + "true",
             ]:
                 # The bool variant type has unusual constructors (they start with a lowercase letter).
-                typ = TYPE_CONSTRUCTOR
+                category = DashCategory.CONSTRUCTOR
             elif name.split(".")[-1][0].islower():
-                typ = TYPE_FIELD
+                category = DashCategory.FIELD
             else:
-                typ = TYPE_CONSTRUCTOR
+                category = DashCategory.CONSTRUCTOR
             if module_name == "Unit" and name == "t.()":
                 # `Unit.t.()` shows as `Unit.t.` in the Dash search bar (index). Is Dash
                 # trying to be smart and trimming off the trailing `()` because it looks
                 # like a function call? Work around that by adding a unicode Zero Width
                 # Space between the parentheses.
                 add_index(
-                    f"{module_name}.{name[:3]}\u200B{name[3]}", typ, anchor(spanid)
+                    f"{module_name}.{name[:3]}\u200B{name[3]}", category, anchor(spanid)
                 )
             else:
-                add_index(f"{module_name}.{name}", typ, anchor(spanid))
+                add_index(f"{module_name}.{name}", category, anchor(spanid))
             span.parent.insert_before(
                 anchor_element(
                     soup,
-                    typ,
+                    category,
                     # In the sidebar (ToC), display constructor names from a module's
                     # primary type (`type t` by convention) in a cleaner way.
                     name[len(TEE_PREFIX) :] if name.startswith(TEE_PREFIX) else name,
@@ -287,19 +294,20 @@ def handle_module(html_path, html_internal_path, module_name, h1, soup):  # noqa
 
         elif spanid.startswith("TYPE"):
             name = spanid[4:]
-            span.parent.insert_before(anchor_element(soup, TYPE_TYPE, name))
-            add_index(f"{module_name}.{name}", TYPE_TYPE, anchor(spanid))
-            # add_index(f'{module_name}.{name}', TYPE_TYPE, anchor(f'//apple_ref/cpp/{TYPE_TYPE}/{name}'))
+            span.parent.insert_before(anchor_element(soup, DashCategory.TYPE, name))
+            add_index(f"{module_name}.{name}", DashCategory.TYPE, anchor(spanid))
         elif spanid.startswith("EXCEPTION"):
             name = spanid[9:]
-            add_index(f"{module_name}.{name}", TYPE_EXCEPTION, anchor(spanid))
-            span.parent.insert_before(anchor_element(soup, TYPE_EXCEPTION, name))
+            add_index(f"{module_name}.{name}", DashCategory.EXCEPTION, anchor(spanid))
+            span.parent.insert_before(
+                anchor_element(soup, DashCategory.EXCEPTION, name)
+            )
         elif spanid.startswith("VAL"):
             name = spanid[3:]
             if contains(span.parent, "->"):
-                valtype = TYPE_FUNCTION
+                valtype = DashCategory.FUNCTION
             else:
-                valtype = TYPE_VALUE
+                valtype = DashCategory.VALUE
             add_index(f"{module_name}.{name}", valtype, anchor(spanid))
             span.parent.insert_before(anchor_element(soup, valtype, name))
             # print(list(span.parent.strings))
