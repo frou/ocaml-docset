@@ -65,10 +65,17 @@ def equivalent_unprefixed_stdlib_module_path(html_path):
         return unprefixed_html_path
 
 
+class HomemadeSoup(BeautifulSoup):
+    tweaked: bool  # Has the markup been modified such that it should be written back out to the file?
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tweaked = False
+
+
 def run(html_path, html_internal_path):
     with open(html_path) as fp:
-        soup = BeautifulSoup(fp, "html.parser")
-    soup.made_changes = False
+        soup = HomemadeSoup(fp, "html.parser")
     h1 = soup.find("h1")
     if h1 is None:
         if not os.path.basename(html_internal_path).startswith("type_"):
@@ -133,7 +140,7 @@ def anchor_element(soup, typ, id_):
     a = soup.new_tag("a")
     a.attrs["name"] = f"//apple_ref/cpp/{typ}/{id_quoted}"
     a.attrs["class"] = "dashAnchor"
-    soup.made_changes = True
+    soup.tweaked = True
     return a
 
 
@@ -169,7 +176,7 @@ def handle_library(html_path, html_internal_path, library_name, soup):
     def getid(element):
         if "id" not in element.attrs:
             element["id"] = autoid()
-            soup.made_changes = True
+            soup.tweaked = True
         return element["id"]
 
     for pre in soup.find_all("pre"):
@@ -342,6 +349,6 @@ for html_path in all_html_paths:
         os.makedirs(os.path.dirname(output_filename))
 
     doc, entries = run(html_path, html_internal_path)
-    if doc is not None and doc.made_changes:
+    if doc is not None and doc.tweaked:
         with open(output_filename, "w") as f:
             f.write(str(doc))
