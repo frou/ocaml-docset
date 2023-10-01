@@ -9,9 +9,10 @@ import urllib.parse
 from enum import StrEnum, auto
 from fnmatch import fnmatch
 from pathlib import Path
+from typing import Any, Optional
 
 # REF: https://www.crummy.com/software/BeautifulSoup/bs4/doc/
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 # @todo Use pathlib throughout instead of sometimes strings
 
@@ -45,45 +46,37 @@ def add_index(name: str, category: DashCategory, path: str) -> None:
     )
 
 
-def contains(node, string):
-    for s in node.strings:
-        if string in s:
-            return True
-    return False
-
-
 STDLIB_MODULE_NAME = "Stdlib"
 STDLIB_MODULE_PREFIX = STDLIB_MODULE_NAME + "."
 
 
-def equivalent_unprefixed_stdlib_module_path(html_path):
+def equivalent_unprefixed_stdlib_module_path(html_path: str) -> Optional[Path]:
     original_html_path = Path(html_path)
     if not original_html_path.name.startswith(STDLIB_MODULE_PREFIX):
-        return
+        return None
     unprefixed_html_path = (
         original_html_path.parent
         / original_html_path.name.removeprefix(STDLIB_MODULE_PREFIX)
     )
-    if unprefixed_html_path.exists():
-        return unprefixed_html_path
+    return unprefixed_html_path if unprefixed_html_path.exists() else None
 
 
-class HomemadeSoup(BeautifulSoup):
+class Markup(BeautifulSoup):
     tweaked: bool  # Has the markup been modified such that it should be written back out to the file?
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
         self.tweaked = False
 
 
-def run(html_path, html_internal_path):
+def run(html_path: str, html_internal_path: str) -> Markup:
     with open(html_path) as fp:
-        soup = HomemadeSoup(fp, "html.parser")
+        soup = Markup(fp, "html.parser")
     h1 = soup.find("h1")
-    if h1 is None:
+    if not isinstance(h1, Tag):
         if not os.path.basename(html_internal_path).startswith("type_"):
-            logging.info("no h1 in %s", html_internal_path)
-        return soup, []
+            logging.info("no h1 tag in %s", html_internal_path)
+        return soup
     h1_content = list(h1.stripped_strings)
     libmatch = RE_LIBRARY_CHAPTER.fullmatch(" ".join(h1_content))
 
@@ -91,7 +84,7 @@ def run(html_path, html_internal_path):
     # @body ...and instead of having these similar nested function definitions,
     # @body have one top-level function definition that can be partially applied
     # @body to html_internal_path
-    def anchor(id_):
+    def anchor(id_: str) -> str:
         return html_internal_path + "#" + id_
 
     if h1_content[0].startswith("Module") or h1_content[0].startswith("Functor"):
@@ -121,24 +114,26 @@ def run(html_path, html_internal_path):
             # as "for system use only".
             or module_name.startswith("Camlinternal")
         ):
-            return soup, []
+            return soup
 
         add_index(module_name, DashCategory.MODULE, html_internal_path)
         handle_module(html_path, html_internal_path, module_name, h1, soup)
-        return soup, []
+        return soup
     elif libmatch is not None:
         libname = libmatch.group(1)
-        add_index(libname, DashCategory.LIBRARY, anchor(h1["id"]))
+        # REF: https://www.crummy.com/software/BeautifulSoup/bs4/doc/#multi-valued-attributes
+        (id_val,) = h1.get_attribute_list("id")
+        add_index(libname, DashCategory.LIBRARY, anchor(id_val))
         handle_library(html_path, html_internal_path, libname, soup)
-        return soup, []
+        return soup
     else:
         if not os.path.basename(html_internal_path).startswith("index_"):
             logging.info("no recognisable library or module in %s", html_internal_path)
-        return soup, []
+        return soup
 
 
 # @todo Every time this function is used, its result is passed to soup's insert_before(...), so just integrate that into this function, and rename this function to mention ToC.
-def anchor_element(soup, category, id_):
+def anchor_element(soup: Markup, category: DashCategory, id_: str) -> Tag:
     id_quoted = urllib.parse.quote(id_, safe="")
     a = soup.new_tag("a")
     a.attrs["name"] = f"//apple_ref/cpp/{category.title()}/{id_quoted}"
@@ -166,21 +161,26 @@ RE_LIB_DOCUMENTATION_OF_EXCEPTION = re.compile(
 )
 
 
-def handle_library(html_path, html_internal_path, library_name, soup):
-    def anchor(id_):
+def handle_library(
+    html_path: str, html_internal_path: str, library_name: str, soup: Markup
+) -> None:
+    def anchor(id_: str) -> str:
         return html_internal_path + "#" + id_
 
     next_id = {"id": 0}
 
-    def autoid():
+    def autoid() -> str:
         id_, next_id["id"] = next_id["id"], next_id["id"] + 1
         return f"autoid_{id_:04x}"
 
-    def getid(element):
+    def getid(element: Tag) -> str:
         if "id" not in element.attrs:
             element["id"] = autoid()
             soup.tweaked = True
-        return element["id"]
+        # return element["id"]
+        # REF: https://www.crummy.com/software/BeautifulSoup/bs4/doc/#multi-valued-attributes
+        (id_val,) = element.get_attribute_list("id")
+        return id_val
 
     for pre in soup.find_all("pre"):
         pretext = " ".join(pre.stripped_strings)
@@ -211,8 +211,10 @@ def handle_library(html_path, html_internal_path, library_name, soup):
 TEE_PREFIX = "t."
 
 
-def handle_module(html_path, html_internal_path, module_name, h1, soup):  # noqa: C901
-    def anchor(id_):
+def handle_module(  # noqa: C901
+    html_path: str, html_internal_path: str, module_name: str, h1: Tag, soup: Markup
+) -> None:
+    def anchor(id_: str) -> str:
         return html_internal_path + "#" + id_
 
     # Add a page ToC entry for the module's own name, because otherwise when the page is
@@ -304,13 +306,12 @@ def handle_module(html_path, html_internal_path, module_name, h1, soup):  # noqa
             )
         elif spanid.startswith("VAL"):
             name = spanid[3:]
-            if contains(span.parent, "->"):
-                valtype = DashCategory.FUNCTION
+            if any("->" in s for s in span.parent.strings):
+                category = DashCategory.FUNCTION
             else:
-                valtype = DashCategory.VALUE
-            add_index(f"{module_name}.{name}", valtype, anchor(spanid))
-            span.parent.insert_before(anchor_element(soup, valtype, name))
-            # print(list(span.parent.strings))
+                category = DashCategory.VALUE
+            add_index(f"{module_name}.{name}", category, anchor(spanid))
+            span.parent.insert_before(anchor_element(soup, category, name))
         # On the Stdlib module's page, nullify the links to its submodules at the
         # bottom, which point to e.g. "Stdlib.Foo.html". Right next to them remain
         # clickable links to distinct pages that document those modules in unprefixed
@@ -356,7 +357,7 @@ for html_path in all_html_paths:
     if not os.path.isdir(os.path.dirname(output_filename)):
         os.makedirs(os.path.dirname(output_filename))
 
-    doc, entries = run(html_path, html_internal_path)
+    doc = run(html_path, html_internal_path)
     if doc is not None and doc.tweaked:
         with open(output_filename, "w") as f:
             f.write(str(doc))
