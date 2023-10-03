@@ -50,13 +50,14 @@ STDLIB_MODULE_PREFIX = STDLIB_MODULE_NAME + "."
 
 def equivalent_unprefixed_stdlib_module_path(html_path: str) -> Optional[Path]:
     original_html_path = Path(html_path)
-    if not original_html_path.name.startswith(STDLIB_MODULE_PREFIX):
-        return None
-    unprefixed_html_path = (
-        original_html_path.parent
-        / original_html_path.name.removeprefix(STDLIB_MODULE_PREFIX)
-    )
-    return unprefixed_html_path if unprefixed_html_path.exists() else None
+    if original_html_path.name.startswith(STDLIB_MODULE_PREFIX):
+        unprefixed_html_path = (
+            original_html_path.parent
+            / original_html_path.name.removeprefix(STDLIB_MODULE_PREFIX)
+        )
+        if unprefixed_html_path.exists():
+            return unprefixed_html_path
+    return None
 
 
 class Markup(BeautifulSoup):
