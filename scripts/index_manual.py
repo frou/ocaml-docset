@@ -68,7 +68,7 @@ class Markup(BeautifulSoup):
         self.tweaked = False
 
 
-def run(html_path: str, html_internal_path: str) -> Markup:
+def process_page(html_path: str, html_internal_path: str) -> Markup:
     with open(html_path) as fp:
         soup = Markup(fp, "html.parser")
     h1 = soup.find("h1")
@@ -99,7 +99,7 @@ def run(html_path: str, html_internal_path: str) -> Markup:
             # `Pervasives.at_exit` in the Index for the same function.
             module_name in ["Pervasives", STDLIB_MODULE_PREFIX + "Pervasives"]
             # For most modules named `Stdlib.Foo`, the manual also contains
-            # documentation for it as module `Foo`. Skip the former because it's noiser.
+            # documentation for it as module `Foo`. Skip the former because it's noisier.
             or (
                 module_name.startswith(STDLIB_MODULE_PREFIX)
                 # It's not always that an equivalent `Foo` module exists, so check the
@@ -314,7 +314,7 @@ def handle_module(  # noqa: C901
         # On the Stdlib module's page, nullify the links to its submodules at the
         # bottom, which point to e.g. "Stdlib.Foo.html". Right next to them remain
         # clickable links to distinct pages that document those modules in unprefixed
-        # form, e.g. "Foo.html". We do this beacase we do not index or create sidebars
+        # form, e.g. "Foo.html". We do this because we do not index or create sidebars
         # (ToCs) for the "Stdlib.Foo.html" pages because they are effectively duplicate
         # content.
         elif module_name == STDLIB_MODULE_NAME and spanid.startswith("MODULE"):
@@ -356,7 +356,7 @@ for html_path in all_html_paths:
     if not os.path.isdir(os.path.dirname(output_filename)):
         os.makedirs(os.path.dirname(output_filename))
 
-    doc = run(html_path, html_internal_path)
-    if doc.tweaked:
+    page_markup = process_page(html_path, html_internal_path)
+    if page_markup.tweaked:
         with open(output_filename, "w") as f:
-            f.write(str(doc))
+            f.write(str(page_markup))

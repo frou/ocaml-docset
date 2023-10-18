@@ -22,7 +22,7 @@ Clone this repository and then run `make` in its directory. The OCaml reference 
 
 ## Installing the Docset
 
-In the Dash application, choose `Preferences > Docsets > [+] > Add Local Docset` and select the generated docset mentioned above.
+In the Dash application, choose `Settings > Docsets > [+] > Add Local Docset` and select the generated docset mentioned above.
 
 <!--
 ---
