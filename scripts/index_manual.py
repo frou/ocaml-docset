@@ -324,10 +324,9 @@ def handle_module(  # noqa: C901
 
 # ------------------------------------------------------------
 
-_, _manual_unpacked_path, _docset_documents_path, _docset_indexdb_path = sys.argv
-manual_unpacked_path = Path(_manual_unpacked_path)
-docset_documents_path = Path(_docset_documents_path)
-docset_indexdb_path = Path(_docset_indexdb_path)
+manual_unpacked_path, docset_documents_path, docset_indexdb_path = (
+    Path(arg) for arg in sys.argv[1:]
+)
 
 all_html_paths = [
     p
