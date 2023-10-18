@@ -1,21 +1,15 @@
 import atexit
-import glob
 import logging
-import os
 import re
 import sqlite3
 import sys
 import urllib.parse
 from enum import StrEnum, auto
-from fnmatch import fnmatch
 from pathlib import Path
 from typing import Any, Optional
 
 # REF: https://www.crummy.com/software/BeautifulSoup/bs4/doc/
 from bs4 import BeautifulSoup, Tag
-
-# @todo Use pathlib throughout instead of sometimes strings
-
 
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
@@ -37,10 +31,10 @@ class DashCategory(StrEnum):
 RE_LIBRARY_CHAPTER = re.compile(r".+The ([^ ]+) library(?:|: .+)")
 
 
-def add_index(name: str, category: DashCategory, path: str) -> None:
+def add_index(name: str, category: DashCategory, href: str) -> None:
     db_cursor.execute(
         """INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES (?, ?, ?)""",
-        (name, category.title(), path),
+        (name, category.title(), href),
     )
 
 
@@ -48,12 +42,10 @@ STDLIB_MODULE_NAME = "Stdlib"
 STDLIB_MODULE_PREFIX = STDLIB_MODULE_NAME + "."
 
 
-def equivalent_unprefixed_stdlib_module_path(html_path: str) -> Optional[Path]:
-    original_html_path = Path(html_path)
-    if original_html_path.name.startswith(STDLIB_MODULE_PREFIX):
-        unprefixed_html_path = (
-            original_html_path.parent
-            / original_html_path.name.removeprefix(STDLIB_MODULE_PREFIX)
+def equivalent_unprefixed_stdlib_module_path(html_path: Path) -> Optional[Path]:
+    if html_path.name.startswith(STDLIB_MODULE_PREFIX):
+        unprefixed_html_path = html_path.parent / html_path.name.removeprefix(
+            STDLIB_MODULE_PREFIX
         )
         if unprefixed_html_path.exists():
             return unprefixed_html_path
@@ -68,12 +60,12 @@ class Markup(BeautifulSoup):
         self.tweaked = False
 
 
-def process_page(html_path: str, html_internal_path: str) -> Markup:
+def process_page(html_path: Path, html_internal_path: Path) -> Markup:
     with open(html_path) as fp:
         soup = Markup(fp, "html.parser")
     h1 = soup.find("h1")
     if not isinstance(h1, Tag):
-        if not os.path.basename(html_internal_path).startswith("type_"):
+        if not html_internal_path.name.startswith("type_"):
             logging.info("no h1 tag in %s", html_internal_path)
         return soup
     h1_content = list(h1.stripped_strings)
@@ -84,7 +76,7 @@ def process_page(html_path: str, html_internal_path: str) -> Markup:
     # @body have one top-level function definition that can be partially applied
     # @body to html_internal_path
     def anchor(id_: str) -> str:
-        return html_internal_path + "#" + id_
+        return f"{html_internal_path}#{id_}"
 
     if h1_content[0].startswith("Module") or h1_content[0].startswith("Functor"):
         module_name = h1_content[1]
@@ -115,7 +107,7 @@ def process_page(html_path: str, html_internal_path: str) -> Markup:
         ):
             return soup
 
-        add_index(module_name, DashCategory.MODULE, html_internal_path)
+        add_index(module_name, DashCategory.MODULE, str(html_internal_path))
         handle_module(html_path, html_internal_path, module_name, h1, soup)
         return soup
     elif libmatch is not None:
@@ -126,7 +118,7 @@ def process_page(html_path: str, html_internal_path: str) -> Markup:
         handle_library(html_path, html_internal_path, libname, soup)
         return soup
     else:
-        if not os.path.basename(html_internal_path).startswith("index_"):
+        if not html_internal_path.name.startswith("index_"):
             logging.info("no recognisable library or module in %s", html_internal_path)
         return soup
 
@@ -161,10 +153,10 @@ RE_LIB_DOCUMENTATION_OF_EXCEPTION = re.compile(
 
 
 def handle_library(
-    html_path: str, html_internal_path: str, library_name: str, soup: Markup
+    _html_path: Path, html_internal_path: Path, library_name: str, soup: Markup
 ) -> None:
     def anchor(id_: str) -> str:
-        return html_internal_path + "#" + id_
+        return f"{html_internal_path}#{id_}"
 
     next_id = {"id": 0}
 
@@ -211,10 +203,10 @@ TEE_PREFIX = "t."
 
 
 def handle_module(  # noqa: C901
-    html_path: str, html_internal_path: str, module_name: str, h1: Tag, soup: Markup
+    _html_path: Path, html_internal_path: Path, module_name: str, h1: Tag, soup: Markup
 ) -> None:
     def anchor(id_: str) -> str:
-        return html_internal_path + "#" + id_
+        return f"{html_internal_path}#{id_}"
 
     # Add a page ToC entry for the module's own name, because otherwise when the page is
     # scrolled down some, it can be unclear precisely which module is being viewed.
@@ -332,19 +324,21 @@ def handle_module(  # noqa: C901
 
 # ------------------------------------------------------------
 
-_, manual_unpacked_path, docset_documents_path, docset_indexdb_path = sys.argv
+_, _manual_unpacked_path, _docset_documents_path, _docset_indexdb_path = sys.argv
+manual_unpacked_path = Path(_manual_unpacked_path)
+docset_documents_path = Path(_docset_documents_path)
+docset_indexdb_path = Path(_docset_indexdb_path)
 
 all_html_paths = [
     p
-    for p in glob.glob(manual_unpacked_path + "/**/*.html", recursive=True)
+    for p in Path(manual_unpacked_path).rglob("*.html")
     # Ignore files related to the compiler's own library.
     #   "Warning: This library is part of the internal OCaml compiler API, and is not
     #    the language standard library."
-    if not fnmatch(p, "**/compilerlibref/*")
+    if not p.match("**/compilerlibref/*")
 ]
 
-if os.path.isfile(docset_indexdb_path):
-    os.unlink(docset_indexdb_path)
+docset_indexdb_path.unlink(missing_ok=True)
 db = sqlite3.connect(docset_indexdb_path)
 atexit.register(db.close)
 atexit.register(db.commit)
@@ -355,11 +349,10 @@ db_cursor.execute(
 db_cursor.execute("""CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path)""")
 
 for html_path in all_html_paths:
-    html_internal_path = os.path.relpath(html_path, start=manual_unpacked_path)
+    html_internal_path = html_path.relative_to(manual_unpacked_path)
 
-    output_filename = os.path.join(docset_documents_path, html_internal_path)
-    if not os.path.isdir(os.path.dirname(output_filename)):
-        os.makedirs(os.path.dirname(output_filename))
+    output_filename = docset_documents_path / html_internal_path
+    output_filename.parent.mkdir(parents=True, exist_ok=True)
 
     page_markup = process_page(html_path, html_internal_path)
     if page_markup.tweaked:
