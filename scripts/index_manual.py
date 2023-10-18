@@ -317,6 +317,11 @@ def handle_module(  # noqa: C901
         # form, e.g. "Foo.html". We do this because we do not index or create sidebars
         # (ToCs) for the "Stdlib.Foo.html" pages because they are effectively duplicate
         # content.
+        #
+        # @todo Instead of nullifying the first link, instead modify it and remove what comes after
+        # @body i.e. `module Bool: Bool` becomes just `module Bool`
+        # @body Also, rename the section from "Standard library modules" to "Submodules of Stdlib", since the list doesn't include the Stdlib module itself?
+        # @body The section is also mentioned in the blurb at the very top of the page.
         elif module_name == STDLIB_MODULE_NAME and spanid.startswith("MODULE"):
             if a := span.find("a"):
                 try:
