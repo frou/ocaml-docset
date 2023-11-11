@@ -31,10 +31,16 @@ class DashCategory(StrEnum):
 RE_LIBRARY_CHAPTER = re.compile(r".+The ([^ ]+) library(?:|: .+)")
 
 
-def add_index(name: str, category: DashCategory, href: str) -> None:
-    db_cursor.execute(
+def add_index(
+    name: str,
+    category: DashCategory,
+    url_path: Path,
+    url_fragment: Optional[str] = None,
+) -> None:
+    url = urllib.parse.urlunparse(("", "", str(url_path), "", "", url_fragment or ""))
+    db.execute(
         """INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES (?, ?, ?)""",
-        (name, category.title(), href),
+        (name, category.title(), url),
     )
 
 
@@ -71,13 +77,6 @@ def process_page(html_path: Path, html_internal_path: Path) -> Markup:
     h1_content = list(h1.stripped_strings)
     libmatch = RE_LIBRARY_CHAPTER.fullmatch(" ".join(h1_content))
 
-    # @todo Rename anchor function to a more accurate name like url_for_id(...)
-    # @body ...and instead of having these similar nested function definitions,
-    # @body have one top-level function definition that can be partially applied
-    # @body to html_internal_path
-    def anchor(id_: str) -> str:
-        return f"{html_internal_path}#{id_}"
-
     if h1_content[0].startswith("Module") or h1_content[0].startswith("Functor"):
         module_name = h1_content[1]
 
@@ -107,14 +106,14 @@ def process_page(html_path: Path, html_internal_path: Path) -> Markup:
         ):
             return soup
 
-        add_index(module_name, DashCategory.MODULE, str(html_internal_path))
+        add_index(module_name, DashCategory.MODULE, html_internal_path)
         handle_module(html_path, html_internal_path, module_name, h1, soup)
         return soup
     elif libmatch is not None:
         libname = libmatch.group(1)
         # REF: https://www.crummy.com/software/BeautifulSoup/bs4/doc/#multi-valued-attributes
         (id_val,) = h1.get_attribute_list("id")
-        add_index(libname, DashCategory.LIBRARY, anchor(id_val))
+        add_index(libname, DashCategory.LIBRARY, html_internal_path, id_val)
         handle_library(html_path, html_internal_path, libname, soup)
         return soup
     else:
@@ -153,11 +152,8 @@ RE_LIB_DOCUMENTATION_OF_EXCEPTION = re.compile(
 
 
 def handle_library(
-    _html_path: Path, html_internal_path: Path, library_name: str, soup: Markup
+    _html_path: Path, html_internal_path: Path, _library_name: str, soup: Markup
 ) -> None:
-    def anchor(id_: str) -> str:
-        return f"{html_internal_path}#{id_}"
-
     next_id = {"id": 0}
 
     def autoid() -> str:
@@ -178,14 +174,19 @@ def handle_library(
         m_type = RE_LIB_DOCUMENTATION_OF_TYPE.fullmatch(pretext)
         if m_type is not None:
             typname = m_type.group(1)
-            add_index(typname, DashCategory.TYPE, anchor(getid(pre)))
+            add_index(typname, DashCategory.TYPE, html_internal_path, getid(pre))
             pre.insert_before(anchor_element(soup, DashCategory.TYPE, typname))
 
             all_ctors = m_type.group(2)
             if all_ctors:
                 for ctor in all_ctors.split("|"):
                     ctor_name = ctor.split()[0]
-                    add_index(ctor_name, DashCategory.CONSTRUCTOR, anchor(getid(pre)))
+                    add_index(
+                        ctor_name,
+                        DashCategory.CONSTRUCTOR,
+                        html_internal_path,
+                        getid(pre),
+                    )
                     pre.insert_before(
                         anchor_element(soup, DashCategory.CONSTRUCTOR, ctor_name)
                     )
@@ -194,7 +195,7 @@ def handle_library(
         m_exn = RE_LIB_DOCUMENTATION_OF_EXCEPTION.fullmatch(pretext)
         if m_exn is not None:
             exnname = m_exn.group(1)
-            add_index(exnname, DashCategory.EXCEPTION, anchor(getid(pre)))
+            add_index(exnname, DashCategory.EXCEPTION, html_internal_path, getid(pre))
             pre.insert_before(anchor_element(soup, DashCategory.EXCEPTION, exnname))
             continue
 
@@ -205,9 +206,6 @@ TEE_PREFIX = "t."
 def handle_module(  # noqa: C901
     _html_path: Path, html_internal_path: Path, module_name: str, h1: Tag, soup: Markup
 ) -> None:
-    def anchor(id_: str) -> str:
-        return f"{html_internal_path}#{id_}"
-
     # Add a page ToC entry for the module's own name, because otherwise when the page is
     # scrolled down some, it can be unclear precisely which module is being viewed.
     h1.insert_before(anchor_element(soup, DashCategory.MODULE, module_name))
@@ -219,7 +217,8 @@ def handle_module(  # noqa: C901
             add_index(
                 f"{module_name} — {major_section}",
                 DashCategory.SECTION,
-                anchor(section_header["id"]),
+                html_internal_path,
+                section_header["id"],
             )
             section_header.insert_before(
                 anchor_element(soup, DashCategory.SECTION, major_section)
@@ -241,7 +240,8 @@ def handle_module(  # noqa: C901
             add_index(
                 f"{module_name}{index_parent_section_prefix} — {minor_section}",
                 DashCategory.SECTION,
-                anchor(section_header["id"]),
+                html_internal_path,
+                section_header["id"],
             )
             section_header.insert_before(
                 anchor_element(
@@ -271,10 +271,13 @@ def handle_module(  # noqa: C901
                 # like a function call? Work around that by adding a unicode Zero Width
                 # Space between the parentheses.
                 add_index(
-                    f"{module_name}.{name[:3]}\u200B{name[3]}", category, anchor(spanid)
+                    f"{module_name}.{name[:3]}\u200B{name[3]}",
+                    category,
+                    html_internal_path,
+                    spanid,
                 )
             else:
-                add_index(f"{module_name}.{name}", category, anchor(spanid))
+                add_index(f"{module_name}.{name}", category, html_internal_path, spanid)
             span.parent.insert_before(
                 anchor_element(
                     soup,
@@ -288,10 +291,17 @@ def handle_module(  # noqa: C901
         elif spanid.startswith("TYPE"):
             name = spanid[4:]
             span.parent.insert_before(anchor_element(soup, DashCategory.TYPE, name))
-            add_index(f"{module_name}.{name}", DashCategory.TYPE, anchor(spanid))
+            add_index(
+                f"{module_name}.{name}", DashCategory.TYPE, html_internal_path, spanid
+            )
         elif spanid.startswith("EXCEPTION"):
             name = spanid[9:]
-            add_index(f"{module_name}.{name}", DashCategory.EXCEPTION, anchor(spanid))
+            add_index(
+                f"{module_name}.{name}",
+                DashCategory.EXCEPTION,
+                html_internal_path,
+                spanid,
+            )
             span.parent.insert_before(
                 anchor_element(soup, DashCategory.EXCEPTION, name)
             )
@@ -301,7 +311,7 @@ def handle_module(  # noqa: C901
                 category = DashCategory.FUNCTION
             else:
                 category = DashCategory.VALUE
-            add_index(f"{module_name}.{name}", category, anchor(spanid))
+            add_index(f"{module_name}.{name}", category, html_internal_path, spanid)
             span.parent.insert_before(anchor_element(soup, category, name))
         # On the Stdlib module's page, nullify the links to its submodules at the
         # bottom, which point to e.g. "Stdlib.Foo.html". Right next to them remain
@@ -328,31 +338,31 @@ manual_unpacked_path, docset_documents_path, docset_indexdb_path = (
     Path(arg) for arg in sys.argv[1:]
 )
 
-all_html_paths = [
+docset_indexdb_path.unlink(missing_ok=True)
+db = sqlite3.connect(docset_indexdb_path)
+atexit.register(db.close)
+atexit.register(db.commit)
+db.execute(
+    """CREATE TABLE searchIndex(id INTEGER PRIMARY KEY, name TEXT, type TEXT, path TEXT)"""
+)
+db.execute("""CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path)""")
+
+for html_path in [
     p
+    # @todo Prior to this script running, the manual contents get copied into the generated docset's directory, so we should glob in that directory instead.
     for p in Path(manual_unpacked_path).rglob("*.html")
     # Ignore files related to the compiler's own library.
     #   "Warning: This library is part of the internal OCaml compiler API, and is not
     #    the language standard library."
     if not p.match("**/compilerlibref/*")
-]
-
-docset_indexdb_path.unlink(missing_ok=True)
-db = sqlite3.connect(docset_indexdb_path)
-atexit.register(db.close)
-atexit.register(db.commit)
-db_cursor = db.cursor()
-db_cursor.execute(
-    """CREATE TABLE searchIndex(id INTEGER PRIMARY KEY, name TEXT, type TEXT, path TEXT)"""
-)
-db_cursor.execute("""CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path)""")
-
-for html_path in all_html_paths:
+]:
     html_internal_path = html_path.relative_to(manual_unpacked_path)
 
+    # @todo Don't need to calculate these unless inside the `tweaked` conditional.
     output_filename = docset_documents_path / html_internal_path
     output_filename.parent.mkdir(parents=True, exist_ok=True)
 
+    # @todo Just open the file here and pass the file handle to rather than threading through a `html_path` parameter.
     page_markup = process_page(html_path, html_internal_path)
     if page_markup.tweaked:
         with open(output_filename, "w") as f:
