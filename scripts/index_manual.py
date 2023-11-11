@@ -67,8 +67,8 @@ class Markup(BeautifulSoup):
 
 
 def process_page(html_path: Path, html_internal_path: Path) -> Markup:
-    with open(html_path) as fp:
-        soup = Markup(fp, "html.parser")
+    with open(html_path) as f:
+        soup = Markup(f, "html.parser")
     h1 = soup.find("h1")
     if not isinstance(h1, Tag):
         if not html_internal_path.name.startswith("type_"):
@@ -107,14 +107,14 @@ def process_page(html_path: Path, html_internal_path: Path) -> Markup:
             return soup
 
         add_index(module_name, DashCategory.MODULE, html_internal_path)
-        handle_module(html_path, html_internal_path, module_name, h1, soup)
+        handle_module(html_internal_path, module_name, h1, soup)
         return soup
     elif libmatch is not None:
         libname = libmatch.group(1)
         # REF: https://www.crummy.com/software/BeautifulSoup/bs4/doc/#multi-valued-attributes
         (id_val,) = h1.get_attribute_list("id")
         add_index(libname, DashCategory.LIBRARY, html_internal_path, id_val)
-        handle_library(html_path, html_internal_path, libname, soup)
+        handle_library(html_internal_path, libname, soup)
         return soup
     else:
         if not html_internal_path.name.startswith("index_"):
@@ -151,9 +151,7 @@ RE_LIB_DOCUMENTATION_OF_EXCEPTION = re.compile(
 )
 
 
-def handle_library(
-    _html_path: Path, html_internal_path: Path, _library_name: str, soup: Markup
-) -> None:
+def handle_library(html_internal_path: Path, _library_name: str, soup: Markup) -> None:
     next_id = {"id": 0}
 
     def autoid() -> str:
@@ -204,7 +202,7 @@ TEE_PREFIX = "t."
 
 
 def handle_module(  # noqa: C901
-    _html_path: Path, html_internal_path: Path, module_name: str, h1: Tag, soup: Markup
+    html_internal_path: Path, module_name: str, h1: Tag, soup: Markup
 ) -> None:
     # Add a page ToC entry for the module's own name, because otherwise when the page is
     # scrolled down some, it can be unclear precisely which module is being viewed.
@@ -334,36 +332,26 @@ def handle_module(  # noqa: C901
 
 # ------------------------------------------------------------
 
-manual_unpacked_path, docset_documents_path, docset_indexdb_path = (
-    Path(arg) for arg in sys.argv[1:]
-)
+docset_documents_path, docset_indexdb_path = (Path(arg) for arg in sys.argv[1:])
 
 docset_indexdb_path.unlink(missing_ok=True)
 db = sqlite3.connect(docset_indexdb_path)
 atexit.register(db.close)
 atexit.register(db.commit)
 db.execute(
-    """CREATE TABLE searchIndex(id INTEGER PRIMARY KEY, name TEXT, type TEXT, path TEXT)"""
+    "CREATE TABLE searchIndex(id INTEGER PRIMARY KEY, name TEXT, type TEXT, path TEXT)"
 )
-db.execute("""CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path)""")
+db.execute("CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path)")
 
-for html_path in [
-    p
-    # @todo Prior to this script running, the manual contents get copied into the generated docset's directory, so we should glob in that directory instead.
-    for p in Path(manual_unpacked_path).rglob("*.html")
+for page_path in [
+    path
+    for path in Path(docset_documents_path).rglob("*.html")
     # Ignore files related to the compiler's own library.
     #   "Warning: This library is part of the internal OCaml compiler API, and is not
     #    the language standard library."
-    if not p.match("**/compilerlibref/*")
+    if not path.match("**/compilerlibref/*")
 ]:
-    html_internal_path = html_path.relative_to(manual_unpacked_path)
-
-    # @todo Don't need to calculate these unless inside the `tweaked` conditional.
-    output_filename = docset_documents_path / html_internal_path
-    output_filename.parent.mkdir(parents=True, exist_ok=True)
-
-    # @todo Just open the file here and pass the file handle to rather than threading through a `html_path` parameter.
-    page_markup = process_page(html_path, html_internal_path)
+    page_markup = process_page(page_path, page_path.relative_to(docset_documents_path))
     if page_markup.tweaked:
-        with open(output_filename, "w") as f:
+        with open(page_path, "w") as f:
             f.write(str(page_markup))
