@@ -20,6 +20,7 @@ class DashCategory(StrEnum):
     EXCEPTION = auto()
     FIELD = auto()
     FUNCTION = auto()
+    INTERFACE = auto()
     LIBRARY = auto()
     MODULE = auto()
     SECTION = auto()
@@ -77,8 +78,16 @@ def process_page(html_path: Path, html_internal_path: Path) -> Markup:
     h1_content = list(h1.stripped_strings)
     libmatch = RE_LIBRARY_CHAPTER.fullmatch(" ".join(h1_content))
 
-    if h1_content[0].startswith("Module") or h1_content[0].startswith("Functor"):
+    if h1_content[0].startswith("Module") or h1_content[0] == "Functor":
+        if h1_content[0] == "Module type":
+            category = DashCategory.INTERFACE
+        else:
+            category = DashCategory.MODULE
         module_name = h1_content[1]
+
+        # Add a page ToC entry for the module's own name, because otherwise when the page is
+        # scrolled down some, it can be unclear precisely which module is being viewed.
+        h1.insert_before(anchor_element(soup, category, module_name))
 
         if (
             # Skip processing the documentation for some modules, because inserting
@@ -106,8 +115,8 @@ def process_page(html_path: Path, html_internal_path: Path) -> Markup:
         ):
             return soup
 
-        add_index(module_name, DashCategory.MODULE, html_internal_path)
-        handle_module(html_internal_path, module_name, h1, soup)
+        add_index(module_name, category, html_internal_path)
+        handle_module(html_internal_path, module_name, soup)
         return soup
     elif libmatch is not None:
         libname = libmatch.group(1)
@@ -201,13 +210,7 @@ def handle_library(html_internal_path: Path, _library_name: str, soup: Markup) -
 TEE_PREFIX = "t."
 
 
-def handle_module(  # noqa: C901
-    html_internal_path: Path, module_name: str, h1: Tag, soup: Markup
-) -> None:
-    # Add a page ToC entry for the module's own name, because otherwise when the page is
-    # scrolled down some, it can be unclear precisely which module is being viewed.
-    h1.insert_before(anchor_element(soup, DashCategory.MODULE, module_name))
-
+def handle_module(html_internal_path: Path, module_name: str, soup: Markup) -> None:
     major_section = None
     for section_header in soup.find_all(["h2", "h3"]):
         if section_header.name == "h2":
@@ -346,9 +349,7 @@ db.execute("CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path)")
 for page_path in [
     path
     for path in Path(docset_documents_path).rglob("*.html")
-    # Ignore files related to the compiler's own library.
-    #   "Warning: This library is part of the internal OCaml compiler API, and is not
-    #    the language standard library."
+    # "This library is part of the internal OCaml compiler API, and is not the language standard library."
     if not path.match("**/compilerlibref/*")
 ]:
     page_markup = process_page(page_path, page_path.relative_to(docset_documents_path))
