@@ -50,9 +50,9 @@ const routes: Array<Route> = [
     match =>
       Response.redirect(
         makeDocUrl(
-          match.pathname.groups.version,
+          match.pathname.groups.version!,
           "api",
-          match.pathname.groups.page
+          match.pathname.groups.page!
         )
       ),
   ],
@@ -61,9 +61,9 @@ const routes: Array<Route> = [
     match =>
       Response.redirect(
         makeDocUrl(
-          match.pathname.groups.version,
+          match.pathname.groups.version!,
           "manual",
-          match.pathname.groups.page
+          match.pathname.groups.page!
         )
       ),
   ],
@@ -71,9 +71,10 @@ const routes: Array<Route> = [
 
 // NOTE: It seems to be an implementation detail of Deno Deploy that the contents of the
 // GitHub repo linked to the Project appear to be placed under /src
+// @todo Will be able to get a filesystem path rather than URL in the future? discord://discord.com/channels/684898665143206084/684898665151594506/1195756793293438996
 const thisFileRepoRelPath = path.relative("/src", path.fromFileUrl(import.meta.url))
 
-serve(function (req: Request, connInfo: ConnInfo) {
+serve(function(req: Request, connInfo: ConnInfo) {
   for (const [pattern, respond] of routes) {
     const match = pattern.exec(req.url)
     if (match) {
