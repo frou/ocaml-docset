@@ -71,7 +71,7 @@ const routes: Array<Route> = [
 
 // NOTE: It seems to be an implementation detail of Deno Deploy that the contents of the
 // GitHub repo linked to the Project appear to be placed under /src
-const thisFileRepoRelPath = path.relative("/src", import.meta.filename!)
+const thisFileRepoRelPath = path.relative("/src", path.fromFileUrl(import.meta.url))
 
 serve(function(req: Request, connInfo: ConnInfo) {
   for (const [pattern, respond] of routes) {
