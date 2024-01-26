@@ -71,8 +71,7 @@ const routes: Array<Route> = [
 
 // NOTE: It seems to be an implementation detail of Deno Deploy that the contents of the
 // GitHub repo linked to the Project appear to be placed under /src
-// @todo Will be able to get a filesystem path rather than URL in the future? discord://discord.com/channels/684898665143206084/684898665151594506/1195756793293438996
-const thisFileRepoRelPath = path.relative("/src", path.fromFileUrl(import.meta.url))
+const thisFileRepoRelPath = path.relative("/src", import.meta.filename!)
 
 serve(function(req: Request, connInfo: ConnInfo) {
   for (const [pattern, respond] of routes) {
