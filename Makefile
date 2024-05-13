@@ -39,6 +39,7 @@ PYTHON_INVOCATION    = python
 
 # The archive is for (optional) distribution: https://kapeli.com/docsets#dashdocsetfeed
 # @todo Use a GitHub Action to generate the docset serverside and provide an XML feed
+# @body Use this for inspiration? https://github.com/aiotter/deno_api_docset/tree/master/.github/workflows
 $(DOCSET_ARCHIVE_PATH): docset
 	tar --exclude=.DS_Store --strip-components 1 -czf $@ $(DOCSET_PATH)
 
