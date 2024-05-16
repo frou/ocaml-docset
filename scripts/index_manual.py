@@ -11,7 +11,7 @@ from typing import Any, Optional
 # REF: https://www.crummy.com/software/BeautifulSoup/bs4/doc/
 from bs4 import BeautifulSoup, Tag
 
-logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
+logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.WARNING)
 
 
 # REF: https://kapeli.com/docsets#supportedentrytypes
@@ -272,7 +272,7 @@ def handle_module(html_internal_path: Path, module_name: str, soup: Markup) -> N
                 # like a function call? Work around that by adding a unicode Zero Width
                 # Space between the parentheses.
                 add_index(
-                    f"{module_name}.{name[:3]}\u200B{name[3]}",
+                    f"{module_name}.{name[:3]}\u200b{name[3]}",
                     category,
                     html_internal_path,
                     spanid,
