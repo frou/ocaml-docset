@@ -63,7 +63,6 @@ const routes: Array<Route> = [
       Response.redirect(
         makeDocUrl(
           match.pathname.groups.version!,
-          "manual",
           match.pathname.groups.page!
         )
       ),
