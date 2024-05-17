@@ -1,5 +1,7 @@
-OCAML_VERSION     = 5.1
-OCAML_RELEASE_URL = https://v2.ocaml.org/releases/$(OCAML_VERSION)
+OCAML_VERSION     = 5.2
+OCAML_RELEASE_URL = https://caml.inria.fr/distrib/ocaml-$(OCAML_VERSION)
+# @todo Go back to fetching the manual from the modern ocaml.org site once its 404 bug is fixed
+# @body https://github.com/ocaml/ocaml.org/issues/2422
 
 DOWNLOADS_PATH = downloads
 GENERATED_PATH = generated
