@@ -31,9 +31,8 @@ the following URL, and redirect to it:
     https://ocaml.org/manual/5.2/api/Arg.html
 */
 
-import { Status } from "https://deno.land/std@0.178.0/http/http_status.ts"
-import { ConnInfo, serve } from "https://deno.land/std@0.178.0/http/server.ts"
-import * as path from "https://deno.land/std@0.178.0/path/mod.ts"
+import { STATUS_CODE } from "https://deno.land/std@0.224.0/http/status.ts"
+import * as path from "https://deno.land/std@0.224.0/path/mod.ts"
 
 function makeDocUrl(ocamlVersion: string, ...docPathSegments: Array<string>): URL {
   // REF: https://github.com/ocaml/ocaml.org/issues/534#issuecomment-2112596837
@@ -73,20 +72,19 @@ const routes: Array<Route> = [
 // GitHub repo linked to the Project appear to be placed under /src
 const thisFileRepoRelPath = path.relative("/src", path.fromFileUrl(import.meta.url))
 
-serve(function(req: Request, connInfo: ConnInfo) {
-  for (const [pattern, respond] of routes) {
-    const match = pattern.exec(req.url)
-    if (match) {
-      return respond(match)
+export default {
+  fetch(req: Request) {
+    for (const [pattern, respond] of routes) {
+      const match = pattern.exec(req.url)
+      if (match) {
+        return respond(match)
+      }
     }
-  }
 
-  console.warn({
-    unhandledUrlRequested: req.url,
-    by: (connInfo.remoteAddr as Deno.NetAddr).hostname,
-  })
-  return new Response(
-    `Unrecognised path. <a href="https://github.com/frou/ocaml-docset/blob/master/${thisFileRepoRelPath}">See here</a> for an explanation of the purpose of this service, and open an issue if it is not working properly for you.`,
-    { status: Status.NotFound, headers: { "Content-Type": "text/html" } }
-  )
-})
+    console.warn({ unhandledUrlRequested: req.url })
+    return new Response(
+      `Unrecognised path. <a href="https://github.com/frou/ocaml-docset/blob/master/${thisFileRepoRelPath}">See here</a> for an explanation of the purpose of this service, and open an issue if it is not working properly for you.`,
+      { status: STATUS_CODE.NotFound, headers: { "Content-Type": "text/html" } }
+    )
+  },
+}
