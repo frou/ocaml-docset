@@ -1,10 +1,7 @@
 /*
-This file defines a ""Serverless Function"" that comprises some supporting logic needed
-to make the "Open Online Page" and "Copy Online Page URL" Dash features work properly
-for the Docset.
-
-The Deno Deploy platform notices when a new commit is made to the GitHub repo containing
-this file and automatically redeploys it. REF: https://deno.com/deploy/docs/deployments
+This file defines a "Serverless Function" to run on https://deno.com/deploy. It contains
+the supporting logic needed to make the "Open Online Page" and "Copy Online Page URL"
+features work properly in our Dash Docset.
 
 The reason we need to do any of this is that the 2022 redesign of the ocaml.org
 website changed things such that the URLs of pages in the online version of the manual
