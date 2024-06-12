@@ -4,3 +4,7 @@
 prev.db
 
 .venv
+
+pyrightconfig.json
+
+scripts/deno-deploy/deno.json

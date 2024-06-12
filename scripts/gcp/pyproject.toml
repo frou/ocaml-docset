@@ -1,0 +1,14 @@
+# REF: https://packaging.python.org/en/latest/specifications/declaring-project-metadata/#declaring-project-metadata
+# REF: https://peps.python.org/pep-0621/
+
+[project]
+name = "ocaml-docset-backend" # We're repurposing this field to hold the GCP Project's name.
+version = "0.0.0"
+requires-python = ">= 3.12"
+dependencies = [
+  "functions-framework == 3.*",
+]
+
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
