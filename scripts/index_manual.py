@@ -13,6 +13,8 @@ from bs4 import BeautifulSoup, Tag
 
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.WARNING)
 
+# @todo Upgrade dependencies in requirements.txt to latest versions
+
 
 # REF: https://kapeli.com/docsets#supportedentrytypes
 class DashCategory(StrEnum):
