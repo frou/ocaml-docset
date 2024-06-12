@@ -24,8 +24,8 @@ DOCSET_MAIN_PAGE       = $(MANUAL_CONTAINER_BASENAME)/index.html
 DOCSET_INFO_PATH       = $(DOCSET_CONTENTS_PATH)/Info.plist
 DOCSET_ARCHIVE_PATH    = $(GENERATED_PATH)/$(DOCSET_BASENAME_NO_EXT).tgz
 
-# See ./scripts/online-page-redirector.ts
-ONLINE_PAGE_BASE_URL = https://ocaml-docset-redirector.deno.dev/$(OCAML_VERSION)/
+# See ./scripts/gcp/main.py
+ONLINE_PAGE_BASE_URL = https://ocaml-docset-redirect.faas.frou.org/$(OCAML_VERSION)/
 
 STASHED_INDEXDB_PATH = prev.db
 
@@ -92,4 +92,15 @@ clean-all: clean-generated
 
 # ------------------------------------------------------------
 
-.PHONY: docset docset-debug stash-db compare-dbs clean clean-generated clean-all
+# NOTE: This is a convenience to open an editor whose Python LSP should pick up the separate
+#		venv in the nested directory (instead of the venv at the top-level of the repo).
+edit-gcp: EDITOR_ASYNC ?= $(EDITOR)
+edit-gcp: scripts/gcp
+	$(EDITOR_ASYNC) $< $</main.py
+
+# ------------------------------------------------------------
+
+.PHONY: docset docset-debug \
+        stash-db compare-dbs \
+        clean clean-generated clean-all \
+        edit-gcp
