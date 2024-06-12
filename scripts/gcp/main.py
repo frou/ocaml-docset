@@ -1,12 +1,42 @@
+# This file defines a "Serverless Function" to run on https://cloud.google.com/functions/docs/
+#
+# It contains the supporting logic needed to make the "Open Online Page" and "Copy
+# Online Page URL" features work properly in our Dash Docset.
+#
+# The reason we need to do any of this is that the 2022 redesign of the ocaml.org
+# website changed things such that the URLs of pages in the online version of the manual
+# no longer use the same directory structure as the .tar.gz version of the manual
+# (which our Docset is generated from).
+#
+# For example:
+#
+# When the Docset is generated (using the Makefile), it is for a specific OCaml version,
+# and the `DashDocSetFallbackURL` value in its Info.plist file is set to something like:
+#
+#     https://ocaml-docset-redirect.faas.frou.org/5.2/
+#
+# When a Dash user is viewing a page inside the Docset (such as the documentation for the
+# Arg module in the standard library), and selects "Open Online Page" (by first clicking
+# the Share icon at the top right), a URL like the following will be opened in their
+# default web browser:
+#
+#     https://ocaml-docset-redirect.faas.frou.org/5.2/htmlman/libref/Arg.html
+#
+# The logic in this file will receive that HTTP request and will transform that URL into
+# the following URL, and redirect to it:
+#
+#     https://ocaml.org/manual/5.2/api/Arg.html
+
 import json
 from enum import StrEnum, auto
+from pathlib import Path
 from urllib.parse import urlunsplit
 
 import functions_framework
 import werkzeug.routing as rt
 from flask import Request, redirect
 from flask.typing import ResponseReturnValue
-from werkzeug.exceptions import HTTPException
+from werkzeug.exceptions import HTTPException, MethodNotAllowed
 
 
 class PageKind(StrEnum):
@@ -21,8 +51,10 @@ class PageKind(StrEnum):
 # REF: https://werkzeug.palletsprojects.com/en/3.0.x/routing/
 ROUTES = rt.Map(
     [
-        rt.Rule("/<version>/htmlman/libref/<page>", endpoint=PageKind.API),
-        rt.Rule("/<version>/htmlman/<page>", endpoint=PageKind.PROSE),
+        rt.Rule(
+            "/<version>/htmlman/libref/<page>", methods=["GET"], endpoint=PageKind.API
+        ),
+        rt.Rule("/<version>/htmlman/<page>", methods=["GET"], endpoint=PageKind.PROSE),
     ]
 )
 
@@ -33,9 +65,14 @@ def transforming_redirect(request: Request) -> ResponseReturnValue:
     try:
         kind: PageKind
         kind, route_vars = ROUTES.bind_to_environ(request.environ).match()
-    except HTTPException as e:
-        # REF: https://werkzeug.palletsprojects.com/en/3.0.x/routing/#:~:text=A%20NotFound%20exception%20is%20also%20a%20WSGI%20application
+    except MethodNotAllowed as e:
+        # REF: https://werkzeug.palletsprojects.com/en/3.0.x/routing/#:~:text=All%20of%20the%20exceptions%20raised%20are%20subclasses%20of%20HTTPException%20so%20they%20can%20be%20used%20as%20WSGI%20responses
         return e
+    except HTTPException:
+        return (
+            f'Unrecognised path. <a href="https://github.com/frou/ocaml-docset/blob/master/scripts/gcp/{Path(__file__).name}">See here</a> for an explanation of the purpose of this service, and open an issue if it is not working properly for you.',
+            404,
+        )
 
     match kind:
         case PageKind.API:
@@ -48,8 +85,6 @@ def transforming_redirect(request: Request) -> ResponseReturnValue:
             )
         case k:
             log(LogSeverity.CRITICAL, slug=f"unrecognised{PageKind.__name__}", kind=k)
-
-    # @todo Show a message to the browser user encouraging them to report a bug.
 
 
 # Build a manual URL using the modern ocaml.org URL structure.
