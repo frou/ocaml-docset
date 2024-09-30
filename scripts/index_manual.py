@@ -358,3 +358,6 @@ for page_path in [
     if page_markup.tweaked:
         with open(page_path, "w") as f:
             f.write(str(page_markup))
+
+# @todo Log something like "<n> OCaml entities were indexed for the Docset"
+# @→    Based on the row count of the table.

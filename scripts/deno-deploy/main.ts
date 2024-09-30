@@ -39,6 +39,9 @@ function makeDocUrl(ocamlVersion: string, ...docPathSegments: Array<string>): UR
   )
 }
 
+// @todo A similar routing approach has beeen codified in Deno @std? Use that?
+// @→    https://jsr.io/@std/http/doc/~/route
+
 type Route = [URLPattern, (match: URLPatternResult) => Response]
 
 const routes: Array<Route> = [
@@ -74,6 +77,9 @@ const thisFileRepoRelPath = path.join(
 )
 
 export default {
+  // @todo Accept and use the `connInfo` parameter again once on a Deno release with this merged:
+  // @→    https://github.com/denoland/deno/pull/25606
+  // @→    See my commit 5c76661be83479c3353f8ef2f412e5184263d57c
   fetch(req: Request) {
     for (const [pattern, respond] of routes) {
       const match = pattern.exec(req.url)
@@ -89,3 +95,6 @@ export default {
     )
   },
 }
+// @todo Use `satisfies Deno.ServeDefaultExport` above
+// @→    https://deno.com/blog/v1.46#2-type-check
+// @→    https://github.com/denoland/deno/issues/23725
