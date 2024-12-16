@@ -1,12 +1,22 @@
-#
-# We specify our Python dependencies in the modern way, but can derive the requirements.txt file that GCP requires.
-# REF: https://docs.astral.sh/uv/pip/dependencies/
-# REF: https://cloud.google.com/functions/docs/writing/specifying-dependencies-python
-#
+# @todo Try using uv managed Python builds (python-build-standalone) again once the error when
+# @→    installing the `watchdog` package (a dep of `functions-framework`) has been fixed.
+# @→    https://github.com/gorakhargosh/watchdog/issues/1025
+# @→    https://github.com/indygreg/python-build-standalone/issues/210
+# REF: https://docs.astral.sh/uv/configuration/environment/
+# REF: https://docs.astral.sh/uv/concepts/python-versions/#adjusting-python-version-preferences
+#export UV_PYTHON_PREFERENCE = only-managed
+export UV_PYTHON_PREFERENCE = only-system
 
+# By default, we don't want uv commands in the Makefile to create/update the lockfile.
+# REF: https://docs.astral.sh/uv/configuration/environment/#uv_locked
+export UV_LOCKED = 1
+
+# REF: https://docs.astral.sh/uv/pip/dependencies/
 deps: pyproject.toml
 	unset UV_LOCKED && uv sync
 
+# We specify our Python dependencies in the modern way, but can derive the requirements.txt file that GCP requires.
+# REF: https://cloud.google.com/functions/docs/writing/specifying-dependencies-python
 requirements.txt:
 	uv export --no-emit-project --quiet --format requirements-txt -o $@
 
@@ -17,8 +27,7 @@ ENTRY_POINT := transforming_redirect # The name of a function (implicitly in mai
 dev:
 	@# REF: https://cloud.google.com/functions/docs/running/function-frameworks
 	@# We're using the PORT environment variable (see .envrc) rather than --port
-	uv run -- \
-	    functions-framework \
+	uv run -- functions-framework \
 		--debug \
 		--host localhost \
 		--target $(ENTRY_POINT)
@@ -27,7 +36,7 @@ GCP_PROJECT            = $(shell uv run -- python -c 'import tomllib; print(toml
 GCP_DEPLOYMENT_REGION := europe-west4 # This region supports "Cloud Run Domain Mapping".
 GCP_CLOUD_FN_GEN      := gen2
 GCP_CLOUD_FN          := redirect # The name of the Cloud Function in the abstract. It's not an identifier in the source code.
-GCP_CLOUD_FN_RUNTIME   = python$(shell uv run  -- python -c 'import tomllib, re; print(re.sub(r"\D", "", tomllib.load(open("pyproject.toml", "rb"))["project"]["requires-python"]))')
+GCP_CLOUD_FN_RUNTIME   = python$(shell uv run -- python -c 'import tomllib, re; print(re.sub(r"\D", "", tomllib.load(open("pyproject.toml", "rb"))["project"]["requires-python"]))')
 GCP_CLOUD_FN_MAX_INST := 1 # Need to cap this or it would conceivably be possible for a $$$ bill to be run up.
 GCP_CLOUD_FN_CPU      := 0.083
 GCP_CLOUD_FN_MEMORY   := 128MiB
