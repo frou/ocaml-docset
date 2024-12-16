@@ -84,7 +84,7 @@ def transforming_redirect(request: Request) -> ResponseReturnValue:
                 manual_url(request, route_vars["version"], route_vars["page"])
             )
         case k:
-            log(LogSeverity.CRITICAL, slug=f"unrecognised{PageKind.__name__}", kind=k)
+            log(LogSeverity.CRITICAL, slug=f"unhandled{PageKind.__name__}", kind=k)
 
 
 # Build a manual URL using the modern ocaml.org URL structure.
