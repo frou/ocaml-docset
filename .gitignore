@@ -4,3 +4,6 @@ prev.db
 
 .venv
 pyrightconfig.json
+
+scripts/gcp/requirements.txt
+scripts/gcp/uv.lock

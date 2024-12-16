@@ -15,8 +15,8 @@ install: requirements.txt .venv
 requirements.txt: pyproject.toml
 	uv pip compile $< -o $@
 
-#lock: .venv
-#	uv pip freeze | uv pip compile - -o requirements.txt
+lock-current: .venv
+	uv pip freeze | uv pip compile - -o requirements.txt
 
 # ------------------------------------------------------------
 
@@ -57,5 +57,5 @@ console:
 
 # ------------------------------------------------------------
 
-.PHONY: install lock \
+.PHONY: install lock-current \
         dev deploy console
