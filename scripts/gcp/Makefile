@@ -5,9 +5,6 @@
 # @→    https://docs.astral.sh/uv/
 # @→    (exporting a requirements.txt that GCP needs) https://docs.astral.sh/uv/concepts/projects/#project-lockfile
 
-.venv:
-	uv venv $@
-
 install: requirements.txt .venv
 	uv pip sync $<
 
