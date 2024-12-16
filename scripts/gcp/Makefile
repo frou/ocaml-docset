@@ -8,7 +8,7 @@ deps: pyproject.toml
 	uv sync
 
 requirements.txt:
-	uv export --locked --quiet --format requirements-txt -o $@
+	uv export --locked --no-emit-project --quiet --format requirements-txt -o $@
 
 # ------------------------------------------------------------
 
