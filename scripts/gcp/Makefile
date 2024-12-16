@@ -23,11 +23,11 @@ dev:
 		--host localhost \
 		--target $(ENTRY_POINT)
 
-GCP_PROJECT           := $(shell uv run -- python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["name"])')
+GCP_PROJECT            = $(shell uv run --locked -- python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["name"])')
 GCP_DEPLOYMENT_REGION := europe-west4 # This region supports "Cloud Run Domain Mapping".
 GCP_CLOUD_FN_GEN      := gen2
 GCP_CLOUD_FN          := redirect # The name of the Cloud Function in the abstract. It's not an identifier in the source code.
-GCP_CLOUD_FN_RUNTIME  := python$(shell uv run -- python -c 'import tomllib, re; print(re.sub(r"\D", "", tomllib.load(open("pyproject.toml", "rb"))["project"]["requires-python"]))')
+GCP_CLOUD_FN_RUNTIME   = python$(shell uv run --locked  -- python -c 'import tomllib, re; print(re.sub(r"\D", "", tomllib.load(open("pyproject.toml", "rb"))["project"]["requires-python"]))')
 GCP_CLOUD_FN_MAX_INST := 1 # Need to cap this or it would conceivably be possible for a $$$ bill to be run up.
 GCP_CLOUD_FN_CPU      := 0.083
 GCP_CLOUD_FN_MEMORY   := 128MiB
