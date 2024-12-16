@@ -1,19 +1,14 @@
-# REF: https://github.com/astral-sh/uv?tab=readme-ov-file#getting-started
-# REF: https://github.com/astral-sh/uv?tab=readme-ov-file#advanced-usage
+#
+# We specify our Python dependencies in the modern way, but can derive the requirements.txt file that GCP requires.
+# REF: https://docs.astral.sh/uv/pip/dependencies/
+# REF: https://cloud.google.com/functions/docs/writing/specifying-dependencies-python
+#
 
-# @todo Rather than using uv's pip compatibility commands, try using full uv project
-# @→    https://docs.astral.sh/uv/
-# @→    (exporting a requirements.txt that GCP needs) https://docs.astral.sh/uv/concepts/projects/#project-lockfile
+deps: pyproject.toml
+	uv sync
 
-install: requirements.txt .venv
-	uv pip sync $<
-
-# We define dependencies in the modern way, but can derive this file from that.
-requirements.txt: pyproject.toml
-	uv pip compile $< -o $@
-
-lock-current: .venv
-	uv pip freeze | uv pip compile - -o requirements.txt
+requirements.txt:
+	uv export --locked --quiet --format requirements-txt -o $@
 
 # ------------------------------------------------------------
 
@@ -22,7 +17,8 @@ ENTRY_POINT := transforming_redirect # The name of a function (implicitly in mai
 dev:
 	@# REF: https://cloud.google.com/functions/docs/running/function-frameworks
 	@# We're using the PORT environment variable (see .envrc) rather than --port
-	functions-framework \
+	uv run --locked -- \
+	    functions-framework \
 		--debug \
 		--host localhost \
 		--target $(ENTRY_POINT)
@@ -54,5 +50,5 @@ console:
 
 # ------------------------------------------------------------
 
-.PHONY: install lock-current \
+.PHONY: deps \
         dev deploy console
