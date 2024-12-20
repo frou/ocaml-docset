@@ -1,23 +1,19 @@
-# @todo Try using uv managed Python builds (python-build-standalone) again once the error when
-# @→    installing the `watchdog` package (a dep of `functions-framework`) has been fixed.
-# @→    https://github.com/gorakhargosh/watchdog/issues/1025
-# @→    https://github.com/indygreg/python-build-standalone/issues/210
+#
 # REF: https://docs.astral.sh/uv/configuration/environment/
+#
 # REF: https://docs.astral.sh/uv/concepts/python-versions/#adjusting-python-version-preferences
-#export UV_PYTHON_PREFERENCE = only-managed
-export UV_PYTHON_PREFERENCE = only-system
-
+export UV_PYTHON_PREFERENCE = only-managed
 # By default, we don't want uv commands in the Makefile to create/update the lockfile.
-# REF: https://docs.astral.sh/uv/configuration/environment/#uv_locked
 export UV_LOCKED = 1
 
 # REF: https://docs.astral.sh/uv/pip/dependencies/
+# REF: https://docs.astral.sh/uv/concepts/projects/sync/
 deps: pyproject.toml
 	unset UV_LOCKED && uv sync
 
 # We specify our Python dependencies in the modern way, but can derive the requirements.txt file that GCP requires.
 # REF: https://cloud.google.com/functions/docs/writing/specifying-dependencies-python
-requirements.txt:
+requirements.txt: uv.lock
 	uv export --no-emit-project --quiet --format requirements-txt -o $@
 
 # ------------------------------------------------------------
