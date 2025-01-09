@@ -7,7 +7,7 @@ Compared to Dash's official docset for OCaml[^1], this one:
 
 * [Is more up-to-date](https://github.com/frou/ocaml-docset/blob/master/Makefile#L1).
 * Has better accuracy, in terms of which identifiers are successfully indexed and how they are categorized.
-* Has better usability, e.g. the hierarchy of the Sections within a page is preserved in the sidebar.
+* Has better usability, e.g. the hierarchy of a page's sections is visualised in Dash's sidebar.
 
 ![Screenshot of Dash showing the Stdlib module in this docset](https://raw.githubusercontent.com/frou/ocaml-docset/master/screenshot.png)
 
