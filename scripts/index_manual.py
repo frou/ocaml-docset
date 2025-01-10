@@ -13,8 +13,6 @@ from bs4 import BeautifulSoup, Tag
 
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.WARNING)
 
-# @todo Upgrade dependencies in requirements.txt to latest versions
-
 
 # REF: https://kapeli.com/docsets#supportedentrytypes
 class DashCategory(StrEnum):
@@ -170,12 +168,12 @@ def handle_library(html_internal_path: Path, _library_name: str, soup: Markup) -
         return f"autoid_{id_:04x}"
 
     def getid(element: Tag) -> str:
-        if "id" not in element.attrs:
-            element["id"] = autoid()
-            soup.tweaked = True
-        # return element["id"]
-        # REF: https://www.crummy.com/software/BeautifulSoup/bs4/doc/#multi-valued-attributes
+        # NOTE: Can't just use `element["id"]` because types say that attributes can have multiple
+        #       values: https://www.crummy.com/software/BeautifulSoup/bs4/doc/#multi-valued-attributes
         (id_val,) = element.get_attribute_list("id")
+        if id_val is None:
+            element["id"] = (id_val := autoid())
+            soup.tweaked = True
         return id_val
 
     for pre in soup.find_all("pre"):
@@ -212,7 +210,7 @@ def handle_library(html_internal_path: Path, _library_name: str, soup: Markup) -
 TEE_PREFIX = "t."
 
 
-def handle_module(html_internal_path: Path, module_name: str, soup: Markup) -> None:
+def handle_module(html_internal_path: Path, module_name: str, soup: Markup) -> None:  # noqa: C901
     major_section = None
     for section_header in soup.find_all(["h2", "h3"]):
         if section_header.name == "h2":
