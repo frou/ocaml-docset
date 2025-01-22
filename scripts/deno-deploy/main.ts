@@ -77,9 +77,8 @@ const thisFileRepoRelPath = path.join(
 )
 
 export default {
-  // @todo Accept and use the `connInfo` parameter again once on a Deno release with this merged:
-  // @→    https://github.com/denoland/deno/pull/25606
-  // @→    See my commit 5c76661be83479c3353f8ef2f412e5184263d57c
+  // @todo Accept the `info` method parameter (and use it for for warn logging) if/when Deno Deploy supports it
+  // @→    https://github.com/denoland/deno/pull/25606#issuecomment-2607003209
   fetch(req: Request) {
     for (const [pattern, respond] of routes) {
       const match = pattern.exec(req.url)
