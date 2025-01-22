@@ -28,8 +28,8 @@ the following URL, and redirect to it:
     https://ocaml.org/manual/5.2/api/Arg.html
 */
 
-import { STATUS_CODE } from "https://deno.land/std@0.224.0/http/status.ts"
-import * as path from "https://deno.land/std@0.224.0/path/mod.ts"
+import { STATUS_CODE } from "jsr:@std/http@1.0.12"
+import * as path from "jsr:@std/path@1.0.8"
 
 function makeDocUrl(ocamlVersion: string, ...docPathSegments: Array<string>): URL {
   // REF: https://github.com/ocaml/ocaml.org/issues/534#issuecomment-2112596837
@@ -39,8 +39,9 @@ function makeDocUrl(ocamlVersion: string, ...docPathSegments: Array<string>): UR
   )
 }
 
-// @todo A similar routing approach has beeen codified in Deno @std? Use that?
-// @→    https://jsr.io/@std/http/doc/~/route
+// @todo A similar routing approach has beeen codified in Deno @std?
+// @→    Try that after it's out of Unstable status
+// @→    https://jsr.io/@std/http/doc/unstable-route
 
 type Route = [URLPattern, (match: URLPatternResult) => Response]
 
@@ -93,7 +94,4 @@ export default {
       { status: STATUS_CODE.NotFound, headers: { "Content-Type": "text/html" } }
     )
   },
-}
-// @todo Use `satisfies Deno.ServeDefaultExport` above
-// @→    https://deno.com/blog/v1.46#2-type-check
-// @→    https://github.com/denoland/deno/issues/23725
+} satisfies Deno.ServeDefaultExport
