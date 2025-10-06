@@ -67,7 +67,7 @@ $(MANUAL_PACKED_PATH):
 
 $(PYTHON_VENV_PATH):
 	$(GLOBAL_PYTHON_INVOCATION) -m venv $@
-	$(PYTHON_VENV_ACTIVATE) && pip install -r requirements.txt
+	$(PYTHON_VENV_ACTIVATE) && pip install 'beautifulsoup4 ~= 4.14'
 
 # ------------------------------------------------------------
 
