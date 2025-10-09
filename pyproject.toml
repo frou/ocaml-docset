@@ -1,1 +1,31 @@
-../pyproject
+[project]
+#name = "dummy"
+requires-python = ">=3.13"
+
+#
+# NOTE: This section must exist, for Ruff to respect `[project].requires-python`.
+#       https://docs.astral.sh/ruff/configuration/#config-file-discovery
+#       https://docs.astral.sh/ruff/configuration/#inferring-the-python-version
+#
+# REF: https://docs.astral.sh/ruff/configuration/
+# REF: https://docs.astral.sh/ruff/settings/
+#
+[tool.ruff]
+#line-length = 40
+
+#
+# REF: https://microsoft.github.io/pyright/#/configuration
+#
+[tool.pyright]
+# @todo Remove this duplication if/when Pyright or Basedpyright respect the `[project].requires-python` value
+# @→    https://github.com/DetachHead/basedpyright/issues/921
+pythonVersion = "3.13"
+
+venvPath = "."
+venv = ".venv"
+
+typeCheckingMode = "strict"
+
+reportUnnecessaryTypeIgnoreComment = true
+reportUnknownVariableType = "error"
+reportMatchNotExhaustive = "error"

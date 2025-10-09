@@ -6,7 +6,7 @@ import sys
 import urllib.parse
 from enum import StrEnum, auto
 from pathlib import Path
-from typing import Any, Optional
+from typing import IO, cast
 
 # REF: https://www.crummy.com/software/BeautifulSoup/bs4/doc/
 from bs4 import BeautifulSoup, Tag
@@ -36,7 +36,7 @@ def add_index(
     name: str,
     category: DashCategory,
     url_path: Path,
-    url_fragment: Optional[str] = None,
+    url_fragment: str | None = None,
 ) -> None:
     url = urllib.parse.urlunparse(("", "", str(url_path), "", "", url_fragment or ""))
     db.execute(
@@ -49,7 +49,7 @@ STDLIB_MODULE_NAME = "Stdlib"
 STDLIB_MODULE_PREFIX = STDLIB_MODULE_NAME + "."
 
 
-def equivalent_unprefixed_stdlib_module_path(html_path: Path) -> Optional[Path]:
+def equivalent_unprefixed_stdlib_module_path(html_path: Path) -> Path | None:
     if html_path.name.startswith(STDLIB_MODULE_PREFIX):
         unprefixed_html_path = html_path.parent / html_path.name.removeprefix(
             STDLIB_MODULE_PREFIX
@@ -60,16 +60,28 @@ def equivalent_unprefixed_stdlib_module_path(html_path: Path) -> Optional[Path]:
 
 
 class Markup(BeautifulSoup):
-    tweaked: bool  # Has the markup been modified such that it should be written back out to the file?
+    # Track whether the markup been modified such that it should be written back out to the file.
+    tweaked: bool
 
-    def __init__(self, *args: Any, **kwargs: Any):
-        super().__init__(*args, **kwargs)
+    def __init__(self, markup: IO[str]):
+        super().__init__(markup, "html.parser", multi_valued_attributes=None)
         self.tweaked = False
+
+    def get_attribute_string(self, element: Tag, attr_name: str) -> str | None:
+        attr_val = element.get(attr_name)
+        if attr_val is None:
+            return attr_val
+        # NOTE: We are able to make the assumption that the value has type `str`, since
+        #       it cannot have type `AttributeValueList` (i.e. `list[str]`) because we
+        #       construct `BeautifulSoup` with `multi_valued_attributes=None`.
+        #       (Though, the `element` argument to this method must be a `Tag` created
+        #       by this class for that to hold).
+        return cast(str, attr_val)
 
 
 def process_page(html_path: Path, html_internal_path: Path) -> Markup:
     with open(html_path) as f:
-        soup = Markup(f, "html.parser")
+        soup = Markup(f)
     h1 = soup.find("h1")
     if not isinstance(h1, Tag):
         if not html_internal_path.name.startswith("type_"):
@@ -168,11 +180,10 @@ def handle_library(html_internal_path: Path, _library_name: str, soup: Markup) -
         return f"autoid_{id_:04x}"
 
     def getid(element: Tag) -> str:
-        # NOTE: Can't just use `element["id"]` because types say that attributes can have multiple
-        #       values: https://www.crummy.com/software/BeautifulSoup/bs4/doc/#multi-valued-attributes
-        (id_val,) = element.get_attribute_list("id")
+        attr_name = "id"
+        id_val = soup.get_attribute_string(element, attr_name)
         if id_val is None:
-            element["id"] = (id_val := autoid())
+            element[attr_name] = (id_val := autoid())
             soup.tweaked = True
         return id_val
 
@@ -215,17 +226,20 @@ def handle_module(html_internal_path: Path, module_name: str, soup: Markup) -> N
     for section_header in soup.find_all(["h2", "h3"]):
         if section_header.name == "h2":
             major_section = section_header.string
+            assert major_section is not None
+
             add_index(
                 f"{module_name} — {major_section}",
                 DashCategory.SECTION,
                 html_internal_path,
-                section_header["id"],
+                soup.get_attribute_string(section_header, "id"),
             )
             section_header.insert_before(
                 anchor_element(soup, DashCategory.SECTION, major_section)
             )
         elif section_header.name == "h3":
             minor_section = section_header.string
+            assert minor_section is not None
 
             index_parent_section_prefix, toc_indent = "", ""
             if major_section is None:
@@ -242,7 +256,7 @@ def handle_module(html_internal_path: Path, module_name: str, soup: Markup) -> N
                 f"{module_name}{index_parent_section_prefix} — {minor_section}",
                 DashCategory.SECTION,
                 html_internal_path,
-                section_header["id"],
+                soup.get_attribute_string(section_header, "id"),
             )
             section_header.insert_before(
                 anchor_element(
@@ -251,11 +265,15 @@ def handle_module(html_internal_path: Path, module_name: str, soup: Markup) -> N
             )
 
     for span in soup.find_all("span", id=True):
-        spanid = span["id"]
+        spanid = soup.get_attribute_string(span, "id")
+        assert spanid is not None
+
+        span_parent = span.parent
+        assert span_parent is not None
+
         if spanid.startswith("TYPEELT"):
+            # Can be the name of either a variant-constructor or a record-field; need to determine which.
             name = spanid[7:]
-            # this can either be a constructor or a record field
-            # full_code = ' '.join(span.parent.stripped_strings)
             if module_name == "Bool" and name in [
                 TEE_PREFIX + "false",
                 TEE_PREFIX + "true",
@@ -266,6 +284,7 @@ def handle_module(html_internal_path: Path, module_name: str, soup: Markup) -> N
                 category = DashCategory.FIELD
             else:
                 category = DashCategory.CONSTRUCTOR
+
             if module_name == "Unit" and name == "t.()":
                 # `Unit.t.()` shows as `Unit.t.` in the Dash search bar (index). Is Dash
                 # trying to be smart and trimming off the trailing `()` because it looks
@@ -279,7 +298,8 @@ def handle_module(html_internal_path: Path, module_name: str, soup: Markup) -> N
                 )
             else:
                 add_index(f"{module_name}.{name}", category, html_internal_path, spanid)
-            span.parent.insert_before(
+
+            span_parent.insert_before(
                 anchor_element(
                     soup,
                     category,
@@ -291,7 +311,7 @@ def handle_module(html_internal_path: Path, module_name: str, soup: Markup) -> N
 
         elif spanid.startswith("TYPE"):
             name = spanid[4:]
-            span.parent.insert_before(anchor_element(soup, DashCategory.TYPE, name))
+            span_parent.insert_before(anchor_element(soup, DashCategory.TYPE, name))
             add_index(
                 f"{module_name}.{name}", DashCategory.TYPE, html_internal_path, spanid
             )
@@ -303,17 +323,17 @@ def handle_module(html_internal_path: Path, module_name: str, soup: Markup) -> N
                 html_internal_path,
                 spanid,
             )
-            span.parent.insert_before(
+            span_parent.insert_before(
                 anchor_element(soup, DashCategory.EXCEPTION, name)
             )
         elif spanid.startswith("VAL"):
             name = spanid[3:]
-            if any("->" in s for s in span.parent.strings):
+            if any("->" in s for s in span_parent.strings):
                 category = DashCategory.FUNCTION
             else:
                 category = DashCategory.VALUE
             add_index(f"{module_name}.{name}", category, html_internal_path, spanid)
-            span.parent.insert_before(anchor_element(soup, category, name))
+            span_parent.insert_before(anchor_element(soup, category, name))
         # On the Stdlib module's page, nullify the links to its submodules at the
         # bottom, which point to e.g. "Stdlib.Foo.html". Right next to them remain
         # clickable links to distinct pages that document those modules in unprefixed
