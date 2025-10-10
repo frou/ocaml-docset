@@ -60,7 +60,7 @@ def equivalent_unprefixed_stdlib_module_path(html_path: Path) -> Path | None:
 
 
 class Markup(BeautifulSoup):
-    # Track whether the markup been modified such that it should be written back out to the file.
+    # A flag to track whether the markup has been modified (thus should be e.g. written back out to a file).
     tweaked: bool
 
     def __init__(self, markup: IO[str]):
@@ -377,5 +377,8 @@ for page_path in [
         with open(page_path, "w") as f:
             f.write(str(page_markup))
 
-# @todo Log something like "<n> OCaml entities were indexed for the Docset"
-# @→    Based on the row count of the table.
+logging.getLogger().setLevel(logging.INFO)
+logging.info(
+    "%d entities (across all categories) were indexed",
+    db.execute("SELECT COUNT(*) from searchIndex").fetchone()[0],
+)
