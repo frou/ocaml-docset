@@ -35,11 +35,19 @@ PYTHON_VENV_PATH     = .venv
 PYTHON_VENV_ACTIVATE = source $(PYTHON_VENV_PATH)/bin/activate
 PYTHON_INVOCATION    = python
 
+
+# @todo Rename scripts directory to src/generator and src/backend
+# @→    And put a README in the latter saying the reason this directory contains multiple implementations of the same thing, is that this is a nice small task I can use to try out different "serverless" providers.
+# @→    Use a NOTE alert https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#alerts
+# @→    Try SvelteKit on CloudflareWorkers or Vercel?
+
 # ------------------------------------------------------------
 
 # The archive is for (optional) distribution: https://kapeli.com/docsets#dashdocsetfeed
 # @todo Use a GitHub Action to generate the docset serverside and provide an XML feed
-# @body Use this for inspiration? https://github.com/aiotter/deno_api_docset/tree/master/.github/workflows
+# @→    Use this for inspiration? https://github.com/aiotter/deno_api_docset/tree/master/.github/workflows
+# @→    Also https://github.com/michaelblyons/SublimeText-DashDoc/actions/runs/13080174561/workflow
+
 $(DOCSET_ARCHIVE_PATH): docset
 	tar --exclude=.DS_Store --strip-components 1 -czf $@ $(DOCSET_PATH)
 
