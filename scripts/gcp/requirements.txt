@@ -1,0 +1,3 @@
+# REF("we recommend that you include it as an explicit dependency"): https://cloud.google.com/run/docs/runtimes/python-dependencies
+# REF: https://cloud.google.com/run/docs/runtimes/python-dependencies#pre-installed_packages
+functions-framework

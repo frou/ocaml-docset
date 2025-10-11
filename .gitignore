@@ -3,6 +3,3 @@
 prev.db
 
 .venv
-
-scripts/gcp/requirements.txt
-scripts/gcp/uv.lock

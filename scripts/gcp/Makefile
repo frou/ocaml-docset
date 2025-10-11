@@ -1,43 +1,39 @@
-#
-# REF: https://docs.astral.sh/uv/configuration/environment/
-#
-# REF: https://docs.astral.sh/uv/concepts/python-versions/#adjusting-python-version-preferences
-export UV_PYTHON_PREFERENCE = only-managed
-# By default, we don't want uv commands in the Makefile to create/update the lockfile.
-export UV_LOCKED = 1
+GLOBAL_PYTHON_INVOCATION = python3
 
-# REF: https://docs.astral.sh/uv/pip/dependencies/
-# REF: https://docs.astral.sh/uv/concepts/projects/sync/
-deps: pyproject.toml
-	unset UV_LOCKED && uv sync
+PYTHON_VENV_PATH     = .venv
+PYTHON_VENV_ACTIVATE = source $(PYTHON_VENV_PATH)/bin/activate
+#PYTHON_INVOCATION   = python
+PYTHON_REQUIREMENTS  = requirements.txt
 
-# We specify our Python dependencies in the modern way, but can derive the requirements.txt file that GCP requires.
-# REF: https://cloud.google.com/functions/docs/writing/specifying-dependencies-python
-requirements.txt: uv.lock
-	uv export --no-emit-project --quiet --format requirements-txt -o $@
+$(PYTHON_VENV_PATH):
+	$(GLOBAL_PYTHON_INVOCATION) -m venv $@
+	$(PYTHON_VENV_ACTIVATE) && pip install -r $(PYTHON_REQUIREMENTS)
+
+clean:
+	rm -rf $(PYTHON_VENV_PATH)
 
 # ------------------------------------------------------------
 
 ENTRY_POINT := transforming_redirect # The name of a function (implicitly in main.py)
 
 dev:
-	@# REF: https://cloud.google.com/functions/docs/running/function-frameworks
+	@# REF: https://cloud.google.com/run/docs/local-dev-functions
 	@# We're using the PORT environment variable (see .envrc) rather than --port
-	uv run -- functions-framework \
+	$(PYTHON_VENV_ACTIVATE) && functions-framework \
 		--debug \
 		--host localhost \
 		--target $(ENTRY_POINT)
 
-GCP_PROJECT            = $(shell uv run -- python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["name"])')
+GCP_PROJECT            = $(shell $(GLOBAL_PYTHON_INVOCATION) -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["name"])')
 GCP_DEPLOYMENT_REGION := europe-west4 # This region supports "Cloud Run Domain Mapping".
 GCP_CLOUD_FN_GEN      := gen2
 GCP_CLOUD_FN          := redirect # The name of the Cloud Function in the abstract. It's not an identifier in the source code.
-GCP_CLOUD_FN_RUNTIME   = python$(shell uv run -- python -c 'import tomllib, re; print(re.sub(r"\D", "", tomllib.load(open("pyproject.toml", "rb"))["project"]["requires-python"]))')
+GCP_CLOUD_FN_RUNTIME   = python$(shell $(GLOBAL_PYTHON_INVOCATION) -c 'import tomllib, re; print(re.sub(r"\D", "", tomllib.load(open("pyproject.toml", "rb"))["project"]["requires-python"]))')
 GCP_CLOUD_FN_MAX_INST := 1 # Need to cap this or it would conceivably be possible for a $$$ bill to be run up.
 GCP_CLOUD_FN_CPU      := 0.083
 GCP_CLOUD_FN_MEMORY   := 128MiB
 
-deploy: requirements.txt
+deploy: $(PYTHON_REQUIREMENTS)
 	gcloud functions deploy $(GCP_CLOUD_FN) \
 		--project $(GCP_PROJECT) \
 		--region=$(GCP_DEPLOYMENT_REGION) \
@@ -51,9 +47,9 @@ deploy: requirements.txt
 
 console:
 	@# NOTE: The variables used in the URL need to have whitespace trimmed, because when they are defined, if they have a comment after them then their value will include the trailing space.
-	open "https://console.cloud.google.com/functions/details/$(strip $(GCP_DEPLOYMENT_REGION))/$(strip $(GCP_CLOUD_FN))?env=$(strip $(GCP_CLOUD_FN_GEN))&project=$(strip $(GCP_PROJECT))"
+	open "https://console.cloud.google.com/run/detail/$(strip $(GCP_DEPLOYMENT_REGION))/$(strip $(GCP_CLOUD_FN))/observability/metrics?project=$(strip $(GCP_PROJECT))"
 
 # ------------------------------------------------------------
 
-.PHONY: deps \
+.PHONY: clean \
         dev deploy console

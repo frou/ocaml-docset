@@ -4,7 +4,7 @@
 [project]
 name = "ocaml-docset-backend" # We're repurposing this field to hold the GCP Project's name.
 version = "0.0.0"
-requires-python = ">= 3.12" # This 'Version Specifier' string needs to be kept simple because we also transform it into the name of a GCP Runtime.
+requires-python = ">= 3.13" # This 'Version Specifier' string needs to be kept simple because we also transform it into the name of a GCP Runtime.
 dependencies = [
   "functions-framework ~=3.8",
 ]
