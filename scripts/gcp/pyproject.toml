@@ -9,14 +9,12 @@ dependencies = [
   "functions-framework ~=3.8",
 ]
 
-[build-system]
-requires = ["setuptools >= 61.0"]
-build-backend = "setuptools.build_meta"
-
 # ------------------------------------------------------------
 
-# NOTE: The following copied from my _pyproject/general.toml file
-
+#
+# NOTE: This section must exist, for Ruff to respect `[project].requires-python`.
+#       https://docs.astral.sh/ruff/configuration/#config-file-discovery
+#       https://docs.astral.sh/ruff/configuration/#inferring-the-python-version
 #
 # REF: https://docs.astral.sh/ruff/configuration/
 # REF: https://docs.astral.sh/ruff/settings/
@@ -28,11 +26,15 @@ build-backend = "setuptools.build_meta"
 # REF: https://microsoft.github.io/pyright/#/configuration
 #
 [tool.pyright]
+# @todo Remove this duplication if/when Pyright or Basedpyright respect the `[project].requires-python` value
+# @→    https://github.com/DetachHead/basedpyright/issues/921
+pythonVersion = "3.13"
+
 venvPath = "."
 venv = ".venv"
 
 typeCheckingMode = "strict"
-reportUnknownVariableType = "error"
 
 reportUnnecessaryTypeIgnoreComment = true
+reportUnknownVariableType = "error"
 reportMatchNotExhaustive = "error"

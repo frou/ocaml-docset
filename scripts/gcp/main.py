@@ -59,6 +59,8 @@ ROUTES = rt.Map(
 )
 
 
+# @todo There's some static-typing issue with the decorator (`reportUnknownMemberType` Pyright error)
+# @→    https://github.com/GoogleCloudPlatform/functions-framework-python/issues/361
 @functions_framework.http
 # REF(return type): https://flask.palletsprojects.com/en/3.0.x/quickstart/#about-responses
 def transforming_redirect(request: Request) -> ResponseReturnValue:
@@ -83,7 +85,7 @@ def transforming_redirect(request: Request) -> ResponseReturnValue:
             return redirect(
                 manual_url(request, route_vars["version"], route_vars["page"])
             )
-        case k:
+        case k:  # pyright: ignore[reportUnnecessaryComparison]
             log(LogSeverity.CRITICAL, slug=f"unhandled{PageKind.__name__}", kind=k)
 
 
