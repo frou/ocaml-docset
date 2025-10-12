@@ -16,7 +16,7 @@ clean:
 
 ENTRY_POINT := transforming_redirect # The name of a function (implicitly in main.py)
 
-dev:
+dev: $(PYTHON_VENV_PATH)
 	@# REF: https://cloud.google.com/run/docs/local-dev-functions
 	@# We're using the PORT environment variable (see .envrc) rather than --port
 	$(PYTHON_VENV_ACTIVATE) && functions-framework \
