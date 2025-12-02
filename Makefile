@@ -12,8 +12,7 @@ MANUAL_UNPACKED_PATH      = $(DOWNLOADS_PATH)/$(OCAML_VERSION)
 MANUAL_CONTAINER_BASENAME = htmlman
 
 DOCSET_BASENAME_NO_EXT = ocaml-unofficial
-DOCSET_BASENAME        = $(DOCSET_BASENAME_NO_EXT).docset
-DOCSET_PATH            = $(GENERATED_PATH)/$(DOCSET_BASENAME)
+DOCSET_PATH            = $(GENERATED_PATH)/$(DOCSET_BASENAME_NO_EXT).docset
 DOCSET_CONTENTS_PATH   = $(DOCSET_PATH)/Contents
 DOCSET_RESOURCES_PATH  = $(DOCSET_CONTENTS_PATH)/Resources
 DOCSET_INDEXDB_PATH    = $(DOCSET_RESOURCES_PATH)/docSet.dsidx
@@ -49,7 +48,7 @@ PYTHON_INVOCATION    = python
 # @→    Also https://github.com/michaelblyons/SublimeText-DashDoc/actions/runs/13080174561/workflow
 
 $(DOCSET_ARCHIVE_PATH): docset
-	tar --exclude=.DS_Store --strip-components 1 -czf $@ $(DOCSET_PATH)
+	tar --directory $(dir $(DOCSET_PATH)) --exclude=.DS_Store -czf $@ $(notdir $(DOCSET_PATH))
 
 docset: $(MANUAL_UNPACKED_PATH) $(PYTHON_VENV_PATH)
 	# Copy the HTML manual into the docset
