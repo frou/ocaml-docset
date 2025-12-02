@@ -1,7 +1,7 @@
 GLOBAL_PYTHON_INVOCATION = python3
 
 PYTHON_VENV_PATH     = .venv
-PYTHON_VENV_ACTIVATE = source $(PYTHON_VENV_PATH)/bin/activate
+PYTHON_VENV_ACTIVATE = . $(PYTHON_VENV_PATH)/bin/activate
 #PYTHON_INVOCATION   = python
 PYTHON_REQUIREMENTS  = requirements.txt
 
