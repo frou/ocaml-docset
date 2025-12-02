@@ -16,7 +16,7 @@ Compared to Dash's official docset for OCaml[^1], this one:
 ## Generating the Docset
 
 > [!IMPORTANT]
-> The `python3` and `make` commands must be available on your system.
+> The `python3`, `curl` and `make` commands must be available on your system.
 
 Clone this repository and then run `make` in its directory. The OCaml reference manual will automatically be downloaded, and then transformed into `./generated/ocaml-unofficial.docset`
 
