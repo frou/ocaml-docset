@@ -25,8 +25,8 @@ DOCSET_MAIN_PAGE       = $(MANUAL_CONTAINER_BASENAME)/index.html
 DOCSET_INFO_PATH       = $(DOCSET_CONTENTS_PATH)/Info.plist
 DOCSET_ARCHIVE_PATH    = $(GENERATED_PATH)/$(DOCSET_BASENAME_NO_EXT).tgz
 
-# See ./scripts/gcp/main.py
-ONLINE_PAGE_BASE_URL = https://ocaml-docset-redirect.faas.frou.org/$(OCAML_VERSION)/
+# See ./scripts/deno-deploy/main.ts
+ONLINE_PAGE_BASE_URL = https://ocaml-docset-redirector.deno.holm.scot/$(OCAML_VERSION)/
 
 STASHED_INDEXDB_PATH = prev.db
 

@@ -1,0 +1,14 @@
+{
+  // Use `deno add` / `deno remove` / `deno outdated` to manage this.
+  "imports": {
+    "@std/http": "jsr:@std/http@^1.0.22",
+    "@std/path": "jsr:@std/path@^1.1.3"
+  },
+  "tasks": {
+    "dev": "deno serve main.ts"
+  }
+}
+
+// NOTE: We chose to create this Application using the Deno Deploy web interface (including
+//       the feature to do Production deployments automatically by monitoring commits to the
+//       GitHub repo) and so are not using a workflow based around the `deno deploy` subcommand.

@@ -13,14 +13,14 @@ For example:
 When the Docset is generated (using the Makefile), it is for a specific OCaml version,
 and the `DashDocSetFallbackURL` value in its Info.plist file is set to something like:
 
-    https://ocaml-docset-redirector.deno.dev/5.2/
+    https://ocaml-docset-redirector.deno.holm.scot/5.2/
 
 When a Dash user is viewing a page inside the Docset (such as the documentation for the
 Arg module in the standard library), and selects "Open Online Page" (by first clicking
 the Share icon at the top right), a URL like the following will be opened in their
 default web browser:
 
-    https://ocaml-docset-redirector.deno.dev/5.2/htmlman/libref/Arg.html
+    https://ocaml-docset-redirector.deno.holm.scot/5.2/htmlman/libref/Arg.html
 
 The logic in this file will receive that HTTP request and will transform that URL into
 the following URL, and redirect to it:
@@ -28,8 +28,8 @@ the following URL, and redirect to it:
     https://ocaml.org/manual/5.2/api/Arg.html
 */
 
-import { STATUS_CODE } from "jsr:@std/http@1.0.12"
-import * as path from "jsr:@std/path@1.0.8"
+import { STATUS_CODE } from "@std/http"
+import * as path from "@std/path"
 
 function makeDocUrl(ocamlVersion: string, ...docPathSegments: Array<string>): URL {
   // REF: https://github.com/ocaml/ocaml.org/issues/534#issuecomment-2112596837
@@ -69,18 +69,12 @@ const routes: Array<Route> = [
   ],
 ]
 
-const thisFileRepoRelPath = path.join(
-  "scripts",
-  "deno-deploy",
-  // NOTE: It seems to be an implementation detail of Deno Deploy that the contents of
-  // the Deployment appear to be placed under the absolute path /src at runtime.
-  path.relative("/src", import.meta.filename!)
-)
+// NOTE: It seems to be an implementation detail of Deno Deploy that the contents of
+//       the Build reside in the directory /app/src at runtime.
+const thisFileRepoRelPath = path.relative("/app/src", import.meta.filename!)
 
 export default {
-  // @todo Accept the `info` method parameter (and use it for for warn logging) if/when Deno Deploy supports it
-  // @→    https://github.com/denoland/deno/pull/25606#issuecomment-2607003209
-  fetch(req: Request) {
+  fetch(req: Request, info: Deno.ServeHandlerInfo) {
     for (const [pattern, respond] of routes) {
       const match = pattern.exec(req.url)
       if (match) {
@@ -88,7 +82,10 @@ export default {
       }
     }
 
-    console.warn({ unhandledUrlRequested: req.url })
+    console.warn({
+      unhandledUrlRequested: req.url,
+      by: (info.remoteAddr as Deno.NetAddr).hostname,
+    })
     return new Response(
       `Unrecognised path. <a href="https://github.com/frou/ocaml-docset/blob/master/${thisFileRepoRelPath}">See here</a> for an explanation of the purpose of this service, and open an issue if it is not working properly for you.`,
       { status: STATUS_CODE.NotFound, headers: { "Content-Type": "text/html" } }
