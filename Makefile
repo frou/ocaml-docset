@@ -56,9 +56,11 @@ docset: $(MANUAL_UNPACKED_PATH) $(PYTHON_VENV_PATH)
 	# Copy the HTML manual into the docset
 	mkdir -p $(DOCSET_DOCUMENTS_PATH)
 	cp -a $(MANUAL_UNPACKED_PATH)/$(MANUAL_CONTAINER_BASENAME) $(DOCSET_DOCUMENTS_PATH)
+	@echo
 
-	# Index the HTML manual, and insert anchor tags to enable page ToCs
+	# Index the HTML manual, and insert anchor tags to enable page-level ToCs
 	$(PYTHON_VENV_ACTIVATE) && $(PYTHON_INVOCATION) $(SCRIPTS_PATH)/index_manual.py $(DOCSET_DOCUMENTS_PATH) $(DOCSET_INDEXDB_PATH)
+	@echo
 
 	# Create the Property List file that describes the docset
 	$(PYTHON_VENV_ACTIVATE) && $(PYTHON_INVOCATION) $(SCRIPTS_PATH)/describe_docset.py $(DOCSET_BASENAME_NO_EXT) "$(DOCSET_READABLE_NAME)" $(DOCSET_SEARCH_KEYWORD) $(DOCSET_MAIN_PAGE) $(ONLINE_PAGE_BASE_URL) $(DOCSET_INFO_PATH)

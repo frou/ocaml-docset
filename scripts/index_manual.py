@@ -47,6 +47,8 @@ def add_index(
 
 STDLIB_MODULE_NAME = "Stdlib"
 STDLIB_MODULE_PREFIX = STDLIB_MODULE_NAME + "."
+# t is the conventional name for a module's primary type, if it has one.
+TEE_PREFIX = "t."
 
 
 def equivalent_unprefixed_stdlib_module_path(html_path: Path) -> Path | None:
@@ -73,9 +75,7 @@ class Markup(BeautifulSoup):
             return attr_val
         # NOTE: We are able to make the assumption that the value has type `str`, since
         #       it cannot have type `AttributeValueList` (i.e. `list[str]`) because we
-        #       construct `BeautifulSoup` with `multi_valued_attributes=None`.
-        #       (Though, the `element` argument to this method must be a `Tag` created
-        #       by this class for that to hold).
+        #       construct `BeautifulSoup` with `multi_valued_attributes=None` above.
         return cast(str, attr_val)
 
 
@@ -218,9 +218,6 @@ def handle_library(html_internal_path: Path, _library_name: str, soup: Markup) -
             continue
 
 
-TEE_PREFIX = "t."
-
-
 def handle_module(html_internal_path: Path, module_name: str, soup: Markup) -> None:  # noqa: C901
     major_section = None
     for section_header in soup.find_all(["h2", "h3"]):
@@ -285,11 +282,11 @@ def handle_module(html_internal_path: Path, module_name: str, soup: Markup) -> N
             else:
                 category = DashCategory.CONSTRUCTOR
 
-            if module_name == "Unit" and name == "t.()":
-                # `Unit.t.()` shows as `Unit.t.` in the Dash search bar (index). Is Dash
-                # trying to be smart and trimming off the trailing `()` because it looks
-                # like a function call? Work around that by adding a unicode Zero Width
-                # Space between the parentheses.
+            if module_name == "Unit" and name == TEE_PREFIX + "()":
+                # `Unit.t.()` shows as `Unit.t.` in the Dash search bar (index) for some
+                # reason. Is Dash trying to be smart and trimming off the trailing `()`
+                # because it looks like a function call? Work around that by adding a
+                # unicode Zero Width Space between the parentheses.
                 add_index(
                     f"{module_name}.{name[:3]}\u200b{name[3]}",
                     category,
@@ -379,6 +376,6 @@ for page_path in [
 
 logging.getLogger().setLevel(logging.INFO)
 logging.info(
-    "%d entities (across all categories) were indexed",
-    db.execute("SELECT COUNT(*) from searchIndex").fetchone()[0],
+    "%d entities were indexed (spanning %d categories)",
+    *db.execute("SELECT COUNT(*), COUNT(DISTINCT type) from searchIndex").fetchone(),
 )
