@@ -1,6 +1,6 @@
 # The OCaml release version to generate the docset for.
-# The default value written here is the latest that docset generation has been verified to work for.
-OCAML_VERSION     = 5.4
+# (The default value set here is the latest that docset generation has been verified to work for).
+OCAML_VERSION    ?= 5.4
 OCAML_RELEASE_URL = https://ocaml.org/releases/$(OCAML_VERSION)
 
 DOWNLOADS_PATH = downloads
