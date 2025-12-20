@@ -39,9 +39,12 @@ function makeDocUrl(ocamlVersion: string, ...docPathSegments: Array<string>): UR
   )
 }
 
-// @todo A similar routing approach has beeen codified in Deno @std?
-// @→    Try that after it's out of Unstable status
-// @→    https://jsr.io/@std/http/doc/unstable-route
+// TODO: A similar routing approach that we came up with below has been codified in @std/http - https://jsr.io/@std/http/doc/unstable-route
+//       Use it instead, once it has graduated from Unstable status. Related discussion:
+//       https://github.com/denoland/std/pull/5939
+//       https://github.com/denoland/std/pull/6094
+//       https://github.com/denoland/deno/pull/26595
+//       https://github.com/denoland/deno/issues/26594
 
 type Route = [URLPattern, (match: URLPatternResult) => Response]
 

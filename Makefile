@@ -40,7 +40,7 @@ PYTHON_INVOCATION    = python
 # @todo Rename scripts directory to src/generator and src/backend
 # @→    And put a README in the latter saying the reason this directory contains multiple implementations of the same thing, is that this is a nice small task I can use to try out different "serverless" providers.
 # @→    Use a NOTE alert https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#alerts
-# @→    Try SvelteKit on CloudflareWorkers or Vercel?
+# @→    Try Cloudflare Workers too.
 
 # ------------------------------------------------------------
 
