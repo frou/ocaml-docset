@@ -1,3 +1,5 @@
+.DEFAULT_GOAL := dev
+
 GLOBAL_PYTHON_INVOCATION = python3
 
 PYTHON_VENV_PATH     = .venv
