@@ -1,7 +1,7 @@
 [project]
 name = "ocaml-docset"
 version = "0.0.0"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 
 #
 # NOTE: This section must exist, for Ruff to respect `[project].requires-python`.
@@ -12,21 +12,25 @@ requires-python = ">=3.13"
 # REF: https://docs.astral.sh/ruff/settings/
 #
 [tool.ruff]
-#line-length = 40
+#line-length = 88
 
-#
-# REF: https://microsoft.github.io/pyright/#/configuration
-#
-[tool.pyright]
-# @todo Remove this duplication if/when Pyright or Basedpyright respect the `[project].requires-python` value
+# REF: https://docs.basedpyright.com/latest/configuration/config-files/
+#      https://docs.basedpyright.com/latest/configuration/config-files/#basedpyright-exclusive-settings
+[tool.basedpyright]
+# @todo Remove this duplication if/when Basedpyright respects the `[project].requires-python` value
 # @→    https://github.com/DetachHead/basedpyright/issues/921
-pythonVersion = "3.13"
+pythonVersion = "3.11"
 
-venvPath = "."
-venv = ".venv"
+# NOTE: Basedpyright does not need `venvPath` and `venv` to be set when using a conventional setup.
+#       https://docs.basedpyright.com/latest/benefits-over-pyright/better-defaults/#default-value-for-pythonpath
 
-typeCheckingMode = "strict"
+# NOTE: Basedpyright sets `typeCheckingMode` to its max by default.
+#       https://docs.basedpyright.com/latest/benefits-over-pyright/better-defaults/#typecheckingmode
 
-reportUnnecessaryTypeIgnoreComment = true
-reportUnknownVariableType = "error"
-reportMatchNotExhaustive = "error"
+#
+# Tweak severities of some diagnostics.
+# REF: https://docs.basedpyright.com/latest/configuration/config-files/#diagnostic-categories
+#      https://docs.basedpyright.com/latest/configuration/config-files/#diagnostic-settings-defaults
+#
+reportUnusedParameter = "hint"
+reportUnusedCallResult = "hint"

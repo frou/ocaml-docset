@@ -325,7 +325,7 @@ def handle_module(html_internal_path: Path, module_name: str, soup: Markup) -> N
             )
         elif spanid.startswith("VAL"):
             name = spanid[3:]
-            if any("->" in s for s in span_parent.strings):
+            if any("->" in s for s in span_parent.strings): # pyright: ignore[reportAny]
                 category = DashCategory.FUNCTION
             else:
                 category = DashCategory.VALUE
@@ -377,5 +377,5 @@ for page_path in [
 logging.getLogger().setLevel(logging.INFO)
 logging.info(
     "%d entities were indexed (spanning %d categories)",
-    *db.execute("SELECT COUNT(*), COUNT(DISTINCT type) from searchIndex").fetchone(),
+    *db.execute("SELECT COUNT(*), COUNT(DISTINCT type) from searchIndex").fetchone(), # pyright: ignore[reportAny]
 )
