@@ -334,6 +334,10 @@ def handle_module(html_internal_path: Path, module_name: str, soup: Markup) -> N
                 category = DashCategory.FUNCTION
             else:
                 category = DashCategory.VALUE
+            # TODO: In e.g. the Result.Syntax and Option.Syntax modules, should `let*` and `and*`
+            #       be indexed with the `( ... )` around their names or should that be removed?
+            #       https://ocaml.org/manual/5.5/bindingops.html
+            #       `let+` and `and+` don't have it, but many various stdlib operators have `(...)`
             add_index(f"{module_name}.{name}", category, html_internal_path, spanid)
             span_parent.insert_before(anchor_element(soup, category, name))
         # On the Stdlib module's page, nullify the links to its submodules at the
