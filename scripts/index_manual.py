@@ -220,6 +220,11 @@ def handle_library(html_internal_path: Path, _library_name: str, soup: Markup) -
 
 def handle_module(html_internal_path: Path, module_name: str, soup: Markup) -> None:  # noqa: C901
     major_section = None
+    # TODO: It seems that <h4> is also used, so they need to be indexed too.
+    #       e.g. Module Fun > Examples > Combinators > const
+    #       Relevent? https://github.com/ocaml/odoc/blob/c3f0f46ee2cd1fef030764e0a76d387e889fd9e7/src/html/generator.ml#L181-L202
+    #       https://chatgpt.com/c/699dae05-7878-8328-8546-6f9babb1c16a
+    #       https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Selectors/:heading
     for section_header in soup.find_all(["h2", "h3"]):
         if section_header.name == "h2":
             major_section = section_header.string
@@ -325,7 +330,7 @@ def handle_module(html_internal_path: Path, module_name: str, soup: Markup) -> N
             )
         elif spanid.startswith("VAL"):
             name = spanid[3:]
-            if any("->" in s for s in span_parent.strings): # pyright: ignore[reportAny]
+            if any("->" in s for s in span_parent.strings):  # pyright: ignore[reportAny]
                 category = DashCategory.FUNCTION
             else:
                 category = DashCategory.VALUE
@@ -377,5 +382,8 @@ for page_path in [
 logging.getLogger().setLevel(logging.INFO)
 logging.info(
     "%d entities were indexed (spanning %d categories)",
-    *db.execute("SELECT COUNT(*), COUNT(DISTINCT type) from searchIndex").fetchone(), # pyright: ignore[reportAny]
+    *db.execute("SELECT COUNT(*), COUNT(DISTINCT type) from searchIndex").fetchone(),  # pyright: ignore[reportAny]
 )
+
+# TODO: Apply an edit to htmlman/libref/style.css to use `font-family: ui-monospace, monospace;` for `code`.
+#       https://chatgpt.com/c/699e20a1-7980-8329-a683-12e11975a4e9

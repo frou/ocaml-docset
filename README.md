@@ -7,7 +7,7 @@ Compared to Dash's official docset for OCaml[^1], this one:
 
 * [Is more up-to-date](https://github.com/frou/ocaml-docset/blob/master/Makefile#L1-L3).
 * Has better accuracy, in terms of which identifiers are successfully indexed and how they are categorized.
-* Has better usability, e.g. the hierarchy of a page's sections is visualised in Dash's sidebar.
+* Has better usability, e.g. the hierarchy of a page's Sections is visualised in Dash's sidebar.
 
 ![Screenshot of Dash showing the Stdlib module in this docset](https://raw.githubusercontent.com/frou/ocaml-docset/master/.github/screenshot.png)
 
@@ -20,15 +20,17 @@ Compared to Dash's official docset for OCaml[^1], this one:
 
 Clone this repository and then run `make` in its directory.
 
-The OCaml reference manual will automatically be downloaded, and then transformed into `./generated/ocaml-unofficial.docset`.
+The OCaml reference manual will automatically be downloaded, and then transformed into `./generated/ocaml-unofficial.docset`
 
-Alternatively, the Docset can be generated for a specific version of OCaml (rather than the default version set in the Makefile), by running for example: `OCAML_VERSION=5.2 make` instead of `make`.
+(To generate the Docset for a specific version of OCaml - rather than the default version set by the Makefile - run e.g. `OCAML_VERSION=5.2 make` instead of `make`)
 
 ## Installing the Docset
 
-In the Dash application, choose `Settings > Docsets > [+] > Add Local Docset` and select the generated docset file mentioned above.
+In the Dash application's menu, choose:
 
-Or, in Finder, simply double-click the generated docset file.
+Settings > Docsets > [+] > Add Local Docset
+
+...and select the generated docset file mentioned above. Or, simply double-click that file in Finder.
 
 <!--
 ---

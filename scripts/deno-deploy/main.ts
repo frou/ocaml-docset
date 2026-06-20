@@ -45,6 +45,7 @@ function makeDocUrl(ocamlVersion: string, ...docPathSegments: Array<string>): UR
 //       https://github.com/denoland/std/pull/6094
 //       https://github.com/denoland/deno/pull/26595
 //       https://github.com/denoland/deno/issues/26594
+//       https://github.com/denoland/std/issues?q=in%3Atitle%20route
 
 type Route = [URLPattern, (match: URLPatternResult) => Response]
 
