@@ -39,6 +39,7 @@ PYTHON_INVOCATION    = python
 
 # The archive is for (optional) distribution: https://kapeli.com/docsets#dashdocsetfeed
 # @todo Use a GitHub Action to generate the docset serverside and provide an XML feed
+# @body (If eventually deciding not to do this and deleting the todo, also remove the Inria-related license file from the repo, since we do not actually distribute the manual)
 $(DOCSET_ARCHIVE_PATH): docset
 	tar --exclude=.DS_Store --strip-components 1 -czf $@ $(DOCSET_PATH)
 
@@ -48,7 +49,7 @@ docset: $(MANUAL_UNPACKED_PATH) $(PYTHON_VENV_PATH)
 	cp -a $(MANUAL_UNPACKED_PATH)/$(MANUAL_CONTAINER_BASENAME) $(DOCSET_DOCUMENTS_PATH)
 
 	# Index the HTML manual, and insert anchor tags to enable page ToCs
-	$(PYTHON_VENV_ACTIVATE) && $(PYTHON_INVOCATION) $(SCRIPTS_PATH)/index_manual.py $(DOCSET_DOCUMENTS_PATH) $(DOCSET_INDEXDB_PATH)
+	$(PYTHON_VENV_ACTIVATE) && $(PYTHON_INVOCATION) $(SCRIPTS_PATH)/index_manual.py $(DOCSET_DOCUMENTS_PATH) $(DOCSET_INDEXDB_PATH) $(DOCSET_MAIN_PAGE)
 
 	# Create the Property List file that describes the docset
 	$(PYTHON_VENV_ACTIVATE) && $(PYTHON_INVOCATION) $(SCRIPTS_PATH)/describe_docset.py $(DOCSET_BASENAME_NO_EXT) "$(DOCSET_READABLE_NAME)" $(DOCSET_SEARCH_KEYWORD) $(DOCSET_MAIN_PAGE) $(ONLINE_PAGE_BASE_URL) $(DOCSET_INFO_PATH)

@@ -3,6 +3,7 @@ import logging
 import re
 import sqlite3
 import sys
+import unicodedata
 import urllib.parse
 from enum import StrEnum, auto
 from pathlib import Path
@@ -20,13 +21,14 @@ class DashCategory(StrEnum):
     EXCEPTION = auto()
     FIELD = auto()
     FUNCTION = auto()
+    GUIDE = auto()
     INTERFACE = auto()
     LIBRARY = auto()
     MODULE = auto()
     SECTION = auto()
     TYPE = auto()
     VALUE = auto()
-    # @todo Index the ~35 named Chapters as GUIDE
+    # @todo^ Index the ~35 named Chapters as GUIDE
 
 
 RE_LIBRARY_CHAPTER = re.compile(r".+The ([^ ]+) library(?:|: .+)")
@@ -67,12 +69,17 @@ class Markup(BeautifulSoup):
         self.tweaked = False
 
 
-def process_page(html_path: Path, html_internal_path: Path) -> Markup:
+def process_page(
+    html_path: Path, html_internal_path: Path, known_guide_pages: set[Path]
+) -> Markup:
     with open(html_path) as f:
         soup = Markup(f, "html.parser")
     h1 = soup.find("h1")
     if not isinstance(h1, Tag):
-        if not html_internal_path.name.startswith("type_"):
+        if (
+            not html_internal_path.name.startswith("type_")
+            and html_internal_path not in known_guide_pages
+        ):
             logging.info("no h1 tag in %s", html_internal_path)
         return soup
     h1_content = list(h1.stripped_strings)
@@ -126,7 +133,10 @@ def process_page(html_path: Path, html_internal_path: Path) -> Markup:
         handle_library(html_internal_path, libname, soup)
         return soup
     else:
-        if not html_internal_path.name.startswith("index_"):
+        if (
+            not html_internal_path.name.startswith("index_")
+            and html_internal_path not in known_guide_pages
+        ):
             logging.info("no recognisable library or module in %s", html_internal_path)
         return soup
 
@@ -335,7 +345,9 @@ def handle_module(html_internal_path: Path, module_name: str, soup: Markup) -> N
 
 # ------------------------------------------------------------
 
-docset_documents_path, docset_indexdb_path = (Path(arg) for arg in sys.argv[1:])
+docset_documents_path, docset_indexdb_path, docset_main_page_path = (
+    Path(arg) for arg in sys.argv[1:]
+)
 
 docset_indexdb_path.unlink(missing_ok=True)
 db = sqlite3.connect(docset_indexdb_path)
@@ -346,13 +358,59 @@ db.execute(
 )
 db.execute("CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path)")
 
+# ------------------------------------------------------------
+
+
+def cleaned_text(tag: Tag) -> str:
+    "Replace e.g. U+00A0 (No-Break Space) and U+2003 (Em Space) with normal spaces"
+    return unicodedata.normalize("NFKC", tag.get_text())
+
+
+with open(docset_documents_path / docset_main_page_path) as f:
+    main_page = Markup(f, "html.parser")
+
+known_guide_pages: set[Path] = set()
+for table in main_page.find_all("table"):
+    part_title = cleaned_text(table).splitlines()[1]
+
+    # @todo The Chapters 11 (The OCaml language) and 12 (Language extensions) need to have their own pages parsed
+    # @body Because they do not have much content and contain links to sub pages with the content.
+
+    part_chapters = table.find_next_sibling("ul")
+    for chapter_link in part_chapters.find_all("a"):
+        href = docset_main_page_path.parent / chapter_link.attrs["href"]
+        known_guide_pages.add(href)
+
+        chapter_name = re.sub(
+            r"^(Chapter \d+|\d+\.\d+) ", "", cleaned_text(chapter_link)
+        )
+        if not chapter_name:
+            logging.warning(
+                "chapter link element has no meaningful text? %s", chapter_link
+            )
+            continue
+
+        if part_title in {
+            "An introduction to OCaml",
+            "The OCaml language",
+            "The OCaml tools",
+        }:
+            add_index(f"{part_title} — {chapter_name}", DashCategory.GUIDE, href)
+
+        if part_title == "The OCaml language":
+            index_guides(href)
+
+# ------------------------------------------------------------
+
 for page_path in [
     path
     for path in Path(docset_documents_path).rglob("*.html")
     # "This library is part of the internal OCaml compiler API, and is not the language standard library."
     if not path.match("**/compilerlibref/*")
 ]:
-    page_markup = process_page(page_path, page_path.relative_to(docset_documents_path))
+    page_markup = process_page(
+        page_path, page_path.relative_to(docset_documents_path), known_guide_pages
+    )
     if page_markup.tweaked:
         with open(page_path, "w") as f:
             f.write(str(page_markup))
